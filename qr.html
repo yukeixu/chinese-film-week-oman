@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese Film Week in Oman - Scan Entry</title>
+    <!-- PWA App 配置 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#c0392b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #c0392b;
+            --primary-hover: #e74c3c;
+            --accent-color: #f1c40f;
+            --bg-color: #1a0505;
+            --card-bg: #ffffff;
+            --text-color: #2f3542;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #2c0b0e 0%, #110203 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+        }
+
+        header {
+            margin-bottom: 24px;
+        }
+
+        header h1 {
+            font-size: 24px;
+            color: var(--accent-color);
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        header p {
+            color: #dcdde1;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .card {
+            background: var(--card-bg);
+            color: var(--text-color);
+            border-radius: 16px;
+            padding: 30px 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border-top: 4px solid var(--accent-color);
+            margin-bottom: 20px;
+        }
+
+        .qrcode-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #qrcode {
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            display: inline-block;
+        }
+
+        .tip-text {
+            font-size: 13px;
+            color: #57606f;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 15px;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🇨🇳 🇴🇲 Chinese Film Week in Oman</h1>
+        <p>Celebrating China-Oman Friendship & Cultural Exchange<br>中国驻阿曼使馆首届中国电影周</p>
+    </header>
+
+    <div class="card">
+        <div class="qrcode-box">
+            <div id="qrcode"></div>
+            <p class="tip-text">Scan with your mobile phone<br>to enter the reservation portal</p>
+        </div>
+        <a href="index.html" class="btn">Enter Booking Portal (App Launch)</a>
+    </div>
+</div>
+
+<script>
+    window.addEventListener('DOMContentLoaded', function() {
+        const loc = window.location;
+        const basePath = loc.pathname.substring(0, loc.pathname.lastIndexOf('/') + 1);
+        const targetUrl = loc.protocol + "//" + loc.host + basePath + "index.html";
+
+        new QRCode(document.getElementById("qrcode"), {
+            text: targetUrl,
+            width: 180,
+            height: 180,
+            colorDark : "#8b0000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+    });
+</script>
+
+</body>
+</html>
