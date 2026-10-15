@@ -35,7 +35,7 @@
         body {
             background: linear-gradient(135deg, #2c0b0e 0%, #110203 100%);
             color: var(--text-color);
-            padding: 20px;
+            padding: 15px;
             display: flex;
             justify-content: center;
             min-height: 100vh;
@@ -48,45 +48,45 @@
 
         header {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             color: #fff;
         }
 
         header h1 {
-            font-size: 24px;
+            font-size: 22px;
             color: var(--accent-color);
             margin-bottom: 6px;
         }
 
         header p {
             color: #dcdde1;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .card {
             background: var(--card-bg);
             border-radius: 12px;
-            padding: 24px;
+            padding: 18px;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
             margin-bottom: 20px;
             border-top: 4px solid var(--primary-color);
         }
 
         .card h2 {
-            font-size: 18px;
-            margin-bottom: 16px;
+            font-size: 17px;
+            margin-bottom: 14px;
             padding-bottom: 8px;
             border-bottom: 2px solid var(--bg-color);
             color: #2c0b0e;
         }
 
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
 
         label {
             display: block;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             margin-bottom: 6px;
             color: #2f3542;
@@ -108,30 +108,28 @@
 
         .screen-container {
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .screen {
             background: #2c0b0e;
             color: var(--accent-color);
-            padding: 8px;
+            padding: 6px;
             border-radius: 4px;
-            font-size: 13px;
-            letter-spacing: 3px;
-            margin-bottom: 15px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
             font-weight: bold;
-            max-width: 650px;
-            margin-left: auto;
-            margin-right: auto;
+            width: 100%;
         }
 
         .seat-legend {
             display: flex;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
             font-size: 11px;
             color: #747d8c;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             flex-wrap: wrap;
         }
 
@@ -142,61 +140,71 @@
         }
 
         .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 3px;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
         }
 
+        /* 手机端左右滑动核心样式优化 */
         .seating-map-wrapper {
+            width: 100%;
             overflow-x: auto;
-            padding-bottom: 10px;
-            display: flex;
-            justify-content: center;
+            -webkit-overflow-scrolling: touch; /* 苹果手机平滑滚动惯性 */
+            padding-bottom: 15px;
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            background: #fafbfc;
+            margin-bottom: 10px;
         }
 
         .seats-container {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 5px;
             align-items: center;
+            min-width: 680px; /* 确保内容有足够宽度可供左右滚动 */
+            padding: 15px 10px;
         }
 
         .row-group {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
 
         .row-group.aisle-gap-bottom-de {
-            margin-bottom: 22px;
+            margin-bottom: 18px;
         }
 
         .row-label {
-            width: 25px;
-            font-size: 12px;
+            width: 22px;
+            font-size: 11px;
             font-weight: bold;
             color: #747d8c;
             text-align: center;
+            flex-shrink: 0;
         }
 
         .row-seats {
             display: flex;
             gap: 4px;
             align-items: center;
+            flex-wrap: nowrap; /* 绝对禁止换行 */
         }
 
         .seat {
-            width: 25px;
-            height: 25px;
+            width: 24px;
+            height: 24px;
             background-color: var(--seat-available);
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 9px;
+            font-size: 8px;
             color: #333;
             cursor: pointer;
             user-select: none;
+            flex-shrink: 0; /* 防止座位被挤压变形 */
             transition: transform 0.1s, background-color 0.2s;
         }
 
@@ -221,7 +229,7 @@
         .seat.disabled-chair {
             background-color: var(--seat-disabled);
             color: white;
-            font-size: 7px;
+            font-size: 6px;
             font-weight: bold;
         }
 
@@ -229,7 +237,7 @@
             background-color: var(--seat-vip);
             color: white;
             cursor: not-allowed;
-            font-size: 8px;
+            font-size: 7px;
             font-weight: bold;
         }
 
@@ -240,15 +248,23 @@
         }
 
         .aisle-space {
-            width: 12px;
+            width: 10px;
+            flex-shrink: 0;
         }
 
         .selected-seat-display {
             text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
+            margin-top: 10px;
+            font-size: 13px;
             font-weight: 600;
             color: #2f3542;
+        }
+
+        .scroll-tip {
+            text-align: center;
+            font-size: 11px;
+            color: #a4b0be;
+            margin-bottom: 8px;
         }
 
         .btn {
@@ -258,7 +274,7 @@
             border: none;
             padding: 12px;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: background-color 0.2s;
@@ -275,12 +291,12 @@
 
         .record-item {
             background: var(--bg-color);
-            padding: 16px;
+            padding: 14px;
             border-radius: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
         @media(min-width: 600px) {
@@ -292,13 +308,13 @@
         }
 
         .record-info h3 {
-            font-size: 15px;
+            font-size: 14px;
             margin-bottom: 4px;
             color: #2c0b0e;
         }
 
         .record-info p {
-            font-size: 13px;
+            font-size: 12px;
             color: #747d8c;
             line-height: 1.4;
         }
@@ -308,7 +324,7 @@
             color: white;
             padding: 2px 6px;
             border-radius: 4px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
         }
 
@@ -317,27 +333,26 @@
             flex-direction: column;
             align-items: center;
             background: white;
-            padding: 10px;
+            padding: 8px;
             border-radius: 6px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-            gap: 6px;
+            gap: 4px;
         }
 
         .ticket-qr-box {
-            width: 90px;
-            height: 90px;
+            width: 80px;
+            height: 80px;
         }
 
         .save-qr-btn {
             background: #27ae60;
             color: white;
             border: none;
-            padding: 4px 8px;
+            padding: 4px 6px;
             border-radius: 4px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 500;
             cursor: pointer;
-            transition: background 0.2s;
         }
 
         .save-qr-btn:hover {
@@ -348,9 +363,9 @@
             background: #e74c3c;
             color: white;
             border: none;
-            padding: 6px 12px;
+            padding: 6px 10px;
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
             height: fit-content;
         }
@@ -362,8 +377,8 @@
         .empty-tip {
             text-align: center;
             color: #a4b0be;
-            font-size: 14px;
-            padding: 20px 0;
+            font-size: 13px;
+            padding: 15px 0;
         }
     </style>
 </head>
@@ -404,6 +419,7 @@
                     </div>
                 </div>
 
+                <div class="scroll-tip">👉 左右滑动可查看完整座位区域 (Swipe left/right to view all seats)</div>
                 <div class="seating-map-wrapper">
                     <div class="seats-container" id="seatsContainer"></div>
                 </div>
@@ -660,8 +676,8 @@
 
             new QRCode(document.getElementById(`qr-${record.bookingId}`), {
                 text: record.bookingId,
-                width: 90,
-                height: 90,
+                width: 80,
+                height: 80,
                 colorDark : "#c0392b",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.M
