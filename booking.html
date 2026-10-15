@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese Film Week in Oman - Booking</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#c0392b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #c0392b;
+            --primary-hover: #e74c3c;
+            --accent-color: #f1c40f;
+            --bg-color: #f7f9fc;
+            --card-bg: #ffffff;
+            --text-color: #2f3542;
+            --border-color: #dfe4ea;
+            --seat-available: #ced6e0;
+            --seat-selected: #2ed573;
+            --seat-occupied: #c0392b;
+            --seat-disabled: #ffa502;
+            --seat-vip: #9b59b6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #2c0b0e 0%, #110203 100%);
+            color: var(--text-color);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+            color: #fff;
+        }
+
+        header h1 {
+            font-size: 24px;
+            color: var(--accent-color);
+            margin-bottom: 6px;
+        }
+
+        header p {
+            color: #dcdde1;
+            font-size: 13px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+            border-top: 4px solid var(--primary-color);
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--bg-color);
+            color: #2c0b0e;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #2f3542;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary-color);
+        }
+
+        .screen-container {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .screen {
+            background: #2c0b0e;
+            color: var(--accent-color);
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .seat-legend {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            font-size: 11px;
+            color: #747d8c;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .seating-map-wrapper {
+            overflow-x: auto;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .seats-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .row-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .row-group.aisle-gap-bottom-de {
+            margin-bottom: 22px;
+        }
+
+        .row-label {
+            width: 25px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #747d8c;
+            text-align: center;
+        }
+
+        .row-seats {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .seat {
+            width: 25px;
+            height: 25px;
+            background-color: var(--seat-available);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: #333;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+
+        .seat:hover:not(.occupied):not(.vip-seat):not(.empty) {
+            transform: scale(1.15);
+            background-color: #a4b0be;
+        }
+
+        .seat.selected {
+            background-color: var(--seat-selected) !important;
+            color: white !important;
+            font-weight: bold;
+        }
+
+        .seat.occupied {
+            background-color: var(--seat-occupied);
+            color: white;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .seat.disabled-chair {
+            background-color: var(--seat-disabled);
+            color: white;
+            font-size: 7px;
+            font-weight: bold;
+        }
+
+        .seat.vip-seat {
+            background-color: var(--seat-vip);
+            color: white;
+            cursor: not-allowed;
+            font-size: 8px;
+            font-weight: bold;
+        }
+
+        .seat.empty {
+            background-color: transparent;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .aisle-space {
+            width: 12px;
+        }
+
+        .selected-seat-display {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #2f3542;
+        }
+
+        .btn {
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .record-list {
+            list-style: none;
+        }
+
+        .record-item {
+            background: var(--bg-color);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        @media(min-width: 600px) {
+            .record-item {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .record-info h3 {
+            font-size: 15px;
+            margin-bottom: 4px;
+            color: #2c0b0e;
+        }
+
+        .record-info p {
+            font-size: 13px;
+            color: #747d8c;
+            line-height: 1.4;
+        }
+
+        .booking-id-tag {
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .ticket-qr-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            gap: 6px;
+        }
+
+        .ticket-qr-box {
+            width: 90px;
+            height: 90px;
+        }
+
+        .save-qr-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .save-qr-btn:hover {
+            background: #219653;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            height: fit-content;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        .empty-tip {
+            text-align: center;
+            color: #a4b0be;
+            font-size: 14px;
+            padding: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🇨🇳 🇴🇲 Chinese Film Week in Oman</h1>
+        <p>Organized by the Embassy of China in Oman | Cinema 5 Seating System</p>
+    </header>
+
+    <div class="card">
+        <h2>Book a Screening & Pick Seats</h2>
+        <form id="bookingForm">
+            <div class="form-group">
+                <label for="movie">Select Screening Session (Cinema 5)</label>
+                <select id="movie" onchange="renderSeats()">
+                    <option value="Oct 21 (Wed) 20:10-21:40 | A Tapestry of a Legendary Land">Oct 21 (Wed) 20:10-21:40 - A Tapestry of a Legendary Land (只此青绿)</option>
+                    <option value="Oct 22 (Thu) 18:00-19:59 | Dear You">Oct 22 (Thu) 18:00-19:59 - Dear You</option>
+                    <option value="Oct 22 (Thu) 20:22-22:14 | B for Busy">Oct 22 (Thu) 20:22-22:14 - B for Busy</option>
+                    <option value="Oct 23 (Fri) 16:50-19:43 | The Wandering Earth 2">Oct 23 (Fri) 16:50-19:43 - The Wandering Earth 2 (流浪地球2)</option>
+                    <option value="Oct 23 (Fri) 20:08-22:21 | I Am What I Am 2">Oct 23 (Fri) 20:08-22:21 - I Am What I Am 2 (雄狮少年2)</option>
+                    <option value="Oct 24 (Sat) 17:23-19:24 | Crossing">Oct 24 (Sat) 17:23-19:24 - Crossing (过昭关/跨越)</option>
+                    <option value="Oct 24 (Sat) 19:50-22:11 | The Shadow's Edge">Oct 24 (Sat) 19:50-22:11 - The Shadow's Edge</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Graphical Seating Map (Screen Centered)</label>
+                <div class="screen-container">
+                    <div class="screen">SCREEN</div>
+                    <div class="seat-legend">
+                        <div class="legend-item"><div class="legend-color" style="background:var(--seat-available)"></div>Available</div>
+                        <div class="legend-item"><div class="legend-color" style="background:var(--seat-selected)"></div>Selected</div>
+                        <div class="legend-item"><div class="legend-color" style="background:var(--seat-occupied)"></div>Occupied</div>
+                        <div class="legend-item"><div class="legend-color" style="background:var(--seat-disabled)"></div>Disabled (DIS)</div>
+                        <div class="legend-item"><div class="legend-color" style="background:var(--seat-vip)"></div>VIP Reserved</div>
+                    </div>
+                </div>
+
+                <div class="seating-map-wrapper">
+                    <div class="seats-container" id="seatsContainer"></div>
+                </div>
+                
+                <div class="selected-seat-display" id="selectedSeatText">Selected Seats: None (Max 5)</div>
+            </div>
+
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" required placeholder="Enter your full name">
+            </div>
+
+            <div class="form-group">
+                <label for="idType">ID Type</label>
+                <select id="idType">
+                    <option value="ID Card">ID Card</option>
+                    <option value="Passport">Passport</option>
+                    <option value="Driver License">Driver License</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="idNumber">ID Number</label>
+                <input type="text" id="idNumber" required placeholder="Enter your ID number">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Contact Number (Phone - Max 5 Seats Limit)</label>
+                <input type="tel" id="phone" required placeholder="Enter your phone number">
+            </div>
+
+            <button type="submit" class="btn">Confirm Booking</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>My Bookings & QR Tickets</h2>
+        <ul id="recordList" class="record-list">
+            <div class="empty-tip">No bookings found</div>
+        </ul>
+    </div>
+</div>
+
+<script>
+    let selectedSeats = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        renderSeats();
+        loadRecords();
+    });
+
+    function renderSeats() {
+        const container = document.getElementById('seatsContainer');
+        container.innerHTML = '';
+        selectedSeats = [];
+        updateSelectedText();
+
+        const currentMovie = document.getElementById('movie').value;
+        const records = JSON.parse(localStorage.getItem('cinema_bookings')) || [];
+        
+        const occupiedSeats = [];
+        records.filter(r => r.movie === currentMovie).forEach(r => {
+            if (Array.isArray(r.seats)) occupiedSeats.push(...r.seats);
+            else if (r.seat) occupiedSeats.push(r.seat);
+        });
+
+        const rowNames = ['M', 'L', 'K', 'J', 'I', 'H', 'G', 'F', 'E', 'D', 'C', 'B', 'A'];
+
+        rowNames.forEach(rowLetter => {
+            const rowGroup = document.createElement('div');
+            rowGroup.className = 'row-group';
+            if (rowLetter === 'D') {
+                rowGroup.classList.add('aisle-gap-bottom-de');
+            }
+
+            const label = document.createElement('div');
+            label.className = 'row-label';
+            label.innerText = rowLetter;
+            rowGroup.appendChild(label);
+
+            const rowSeatsDiv = document.createElement('div');
+            rowSeatsDiv.className = 'row-seats';
+
+            let endCol = 22;
+            if (['M', 'L', 'K', 'J', 'I', 'H', 'G', 'F', 'E'].includes(rowLetter)) endCol = 22;
+            else if (['D', 'C', 'B'].includes(rowLetter)) endCol = 21;
+            else if (rowLetter === 'A') endCol = 22;
+
+            for (let col = 1; col <= endCol; col++) {
+                if (['M', 'L', 'K', 'J', 'I', 'H', 'G', 'F'].includes(rowLetter) && (col === 1 || col === 2)) {
+                    const emptySeat = document.createElement('div');
+                    emptySeat.className = 'seat empty';
+                    rowSeatsDiv.appendChild(emptySeat);
+                    continue;
+                }
+                if (['M', 'L', 'K', 'J', 'I', 'H', 'G', 'F', 'E'].includes(rowLetter) && col > 21) {
+                    const aisle = document.createElement('div');
+                    aisle.className = 'aisle-space';
+                    rowSeatsDiv.appendChild(aisle);
+                    continue;
+                }
+                if (['D', 'C', 'B'].includes(rowLetter) && col > 20) {
+                    const aisle = document.createElement('div');
+                    aisle.className = 'aisle-space';
+                    rowSeatsDiv.appendChild(aisle);
+                    continue;
+                }
+
+                if (rowLetter === 'M' && col === 11) {
+                    continue;
+                }
+
+                const seatName = `${rowLetter}-${col}`;
+                const seat = document.createElement('div');
+                seat.className = 'seat';
+
+                let isDisabledChair = (rowLetter === 'M' && (col === 9 || col === 10 || col === 12));
+                let isVipSeat = (rowLetter === 'C' || rowLetter === 'D');
+
+                if (isVipSeat) {
+                    seat.classList.add('vip-seat');
+                    seat.innerText = 'VIP';
+                } else {
+                    let displayNum = (rowLetter === 'M' && col > 11) ? col - 1 : col;
+                    
+                    if (isDisabledChair) {
+                        seat.classList.add('disabled-chair');
+                        seat.innerText = 'DIS';
+                    } else {
+                        seat.innerText = displayNum;
+                    }
+
+                    if (occupiedSeats.includes(seatName)) {
+                        seat.classList.add('occupied');
+                    } else {
+                        seat.addEventListener('click', function() {
+                            if (seat.classList.contains('selected')) {
+                                seat.classList.remove('selected');
+                                selectedSeats = selectedSeats.filter(s => s !== seatName);
+                            } else {
+                                if (selectedSeats.length >= 5) {
+                                    alert('You can book a maximum of 5 seats per reservation!');
+                                    return;
+                                }
+                                seat.classList.add('selected');
+                                selectedSeats.push(seatName);
+                            }
+                            updateSelectedText();
+                        });
+                    }
+                }
+
+                rowSeatsDiv.appendChild(seat);
+
+                if (col === 2) {
+                    const aisle = document.createElement('div');
+                    aisle.className = 'aisle-space';
+                    rowSeatsDiv.appendChild(aisle);
+                }
+            }
+
+            rowGroup.appendChild(rowSeatsDiv);
+            container.appendChild(rowGroup);
+        });
+    }
+
+    function updateSelectedText() {
+        if (selectedSeats.length === 0) {
+            document.getElementById('selectedSeatText').innerText = 'Selected Seats: None (Max 5)';
+        } else {
+            document.getElementById('selectedSeatText').innerText = `Selected Seats (${selectedSeats.length}/5): ${selectedSeats.join(', ')}`;
+        }
+    }
+
+    const bookingForm = document.getElementById('bookingForm');
+    const recordList = document.getElementById('recordList');
+
+    bookingForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        if (selectedSeats.length === 0) {
+            alert('Please select at least one seat from the seating chart!');
+            return;
+        }
+
+        const phone = document.getElementById('phone').value.trim();
+        const movie = document.getElementById('movie').value;
+        const records = JSON.parse(localStorage.getItem('cinema_bookings')) || [];
+
+        const existingBookingsForPhone = records.filter(r => r.phone === phone && r.movie === movie);
+        let existingSeatsCount = 0;
+        existingBookingsForPhone.forEach(r => {
+            if (Array.isArray(r.seats)) existingSeatsCount += r.seats.length;
+            else if (r.seat) existingSeatsCount += 1;
+        });
+
+        if (existingSeatsCount + selectedSeats.length > 5) {
+            alert(`Booking failed! This phone number has already booked ${existingSeatsCount} seats for this screening. Maximum limit is 5 seats.`);
+            return;
+        }
+
+        const name = document.getElementById('name').value.trim();
+        const idType = document.getElementById('idType').value;
+        const idNumber = document.getElementById('idNumber').value.trim();
+
+        const bookingId = 'FW' + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+        const newRecord = {
+            id: Date.now(),
+            bookingId,
+            name,
+            idType,
+            idNumber,
+            phone,
+            movie,
+            seats: [...selectedSeats],
+            time: new Date().toLocaleString()
+        };
+
+        saveRecord(newRecord);
+        bookingForm.reset();
+        renderSeats();
+        loadRecords();
+        alert('Booking successful! Your Booking ID is: ' + bookingId);
+    });
+
+    function loadRecords() {
+        const records = JSON.parse(localStorage.getItem('cinema_bookings')) || [];
+        
+        if (records.length === 0) {
+            recordList.innerHTML = '<div class="empty-tip">No bookings found</div>';
+            return;
+        }
+
+        recordList.innerHTML = '';
+        records.forEach(record => {
+            const seatsStr = Array.isArray(record.seats) ? record.seats.join(', ') : record.seat;
+            const li = document.createElement('li');
+            li.className = 'record-item';
+            li.innerHTML = `
+                <div class="record-info">
+                    <h3>${record.name} <span class="booking-id-tag">ID: ${record.bookingId}</span></h3>
+                    <p><strong>[Seats: ${seatsStr}]</strong></p>
+                    <p>Screening: ${record.movie}</p>
+                    <p>${record.idType}: ${record.idNumber} | Phone: ${record.phone}</p>
+                </div>
+                <div class="ticket-qr-container">
+                    <div class="ticket-qr-box" id="qr-${record.bookingId}"></div>
+                    <button class="save-qr-btn" onclick="saveQRCodeImage('${record.bookingId}', '${record.name}')">💾 Save Ticket</button>
+                </div>
+                <button class="delete-btn" onclick="deleteRecord(${record.id})">Cancel</button>
+            `;
+            recordList.appendChild(li);
+
+            new QRCode(document.getElementById(`qr-${record.bookingId}`), {
+                text: record.bookingId,
+                width: 90,
+                height: 90,
+                colorDark : "#c0392b",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.M
+            });
+        });
+    }
+
+    function saveQRCodeImage(bookingId, attendeeName) {
+        const qrContainer = document.getElementById(`qr-${bookingId}`);
+        const canvasEl = qrContainer.querySelector('canvas') || qrContainer.querySelector('img');
+        
+        if (!canvasEl) {
+            alert('QR code not ready yet.');
+            return;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 400;
+        canvas.height = 480;
+        const ctx = canvas.getContext('2d');
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#c0392b';
+        ctx.fillRect(0, 0, canvas.width, 70);
+
+        ctx.fillStyle = '#f1c40f';
+        ctx.font = 'bold 18px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Chinese Film Week in Oman', canvas.width / 2, 32);
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '12px Arial';
+        ctx.fillText('Cinema 5 - Official Entry Ticket', canvas.width / 2, 52);
+
+        let img = new Image();
+        if (canvasEl.tagName === 'CANVAS') {
+            img.src = canvasEl.toDataURL('image/png');
+        } else {
+            img.src = canvasEl.src;
+        }
+
+        img.onload = function() {
+            ctx.drawImage(img, 110, 95, 180, 180);
+
+            ctx.fillStyle = '#2f3542';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText(`Booking ID: ${bookingId}`, canvas.width / 2, 305);
+
+            ctx.font = '13px Arial';
+            ctx.fillStyle = '#57606f';
+            ctx.fillText(`Attendee: ${attendeeName}`, canvas.width / 2, 335);
+
+            ctx.fillStyle = '#c0392b';
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText('Please present this QR code at the cinema entrance', canvas.width / 2, 385);
+
+            const link = document.createElement('a');
+            link.download = `Ticket_${bookingId}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        };
+    }
+
+    function saveRecord(record) {
+        const records = JSON.parse(localStorage.getItem('cinema_bookings')) || [];
+        records.unshift(record);
+        localStorage.setItem('cinema_bookings', JSON.stringify(records));
+    }
+
+    function deleteRecord(id) {
+        if (confirm('Are you sure you want to cancel this booking?')) {
+            let records = JSON.parse(localStorage.getItem('cinema_bookings')) || [];
+            records = records.filter(record => record.id !== id);
+            localStorage.setItem('cinema_bookings', JSON.stringify(records));
+            renderSeats();
+            loadRecords();
+        }
+    }
+</script>
+
+</body>
+</html>
