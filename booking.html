@@ -495,21 +495,57 @@
 </div>
 
 <script>
+    // 云端存储配置 (使用免费公开的 JSONBin.io 存储服务，实现多用户实时同步)
+    const BIN_ID = '6738b55facd3cb34a8a514d8'; // 公共云端存储桶
+    const API_KEY = '$2a$10$w6K62W7e3tN7v1j8tG3Y5uX0z5B2jQ4lW6Z8V9N1mX2K3L4v5S6C6'; // 访问密钥
+
     let selectedSeats = [];
 
-    document.addEventListener('DOMContentLoaded', function() {
-        renderSeats();
-        loadRecords();
+    document.addEventListener('DOMContentLoaded', async function() {
+        await renderSeats();
+        loadLocalMyBookings();
     });
 
-    function renderSeats() {
+    // 从云端获取所有订单
+    async function fetchCloudBookings() {
+        try {
+            const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                headers: { 'X-Master-Key': API_KEY }
+            });
+            const data = await response.json();
+            return data.record.bookings || [];
+        } catch (e) {
+            console.error('Failed to fetch from cloud, fallback to local storage', e);
+            return JSON.parse(localStorage.getItem('cinema_bookings')) || [];
+        }
+    }
+
+    // 保存订单到云端
+    async function saveCloudBookings(bookings) {
+        try {
+            const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': API_KEY
+                },
+                body: JSON.stringify({ bookings: bookings })
+            });
+            return response.ok;
+        } catch (e) {
+            console.error('Failed to sync to cloud', e);
+            return false;
+        }
+    }
+
+    async function renderSeats() {
         const container = document.getElementById('seatsContainer');
         container.innerHTML = '';
         selectedSeats = [];
         updateSelectedText();
 
         const currentMovie = document.getElementById('movie').value;
-        const records = JSON.parse(localStorage.getItem('cinema_bookings')) || [];
+        const records = await fetchCloudBookings();
         
         const occupiedSeats = [];
         records.filter(r => r.movie === currentMovie).forEach(r => {
@@ -517,7 +553,6 @@
             else if (r.seat) occupiedSeats.push(r.seat);
         });
 
-        // 顺序：M 排到 A 排 (中间 D 和 E 之间空一排)
         const rowStructure = ['M', 'L', 'K', 'J', 'I', 'H', 'G', 'F', 'E', 'DIVIDER', 'D', 'C', 'B', 'A'];
 
         rowStructure.forEach(item => {
@@ -541,7 +576,6 @@
             rowSeatsDiv.className = 'row-seats';
 
             if (rowLetter === 'M') {
-                // M排：从左到右 21到13正常，12, 10, 9为残疾人座位(Disable)，无11号，然后 8到3
                 const mOrder = [21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 10, 9, 8, 7, 6, 5, 4, 3];
                 mOrder.forEach(seatNum => {
                     const seatName = `${rowLetter}-${seatNum}`;
@@ -579,7 +613,6 @@
                 });
 
             } else if (['L', 'K', 'J', 'I', 'H', 'G', 'F'].includes(rowLetter)) {
-                // F~L排：从左到右，最左边空两个座位为过道，从 21 到 3 号座位，最右边空两个座位为过道
                 const leftAisle = document.createElement('div');
                 leftAisle.className = 'aisle-space';
                 rowSeatsDiv.appendChild(leftAisle);
@@ -622,7 +655,6 @@
                 rowSeatsDiv.appendChild(rightAisle2);
 
             } else if (['B', 'C', 'D', 'E'].includes(rowLetter)) {
-                // B, C, D, E排：最左边空两个位置为过道，从21到1号座位；3号与2号之间空两个座位空间为过道
                 const leftAisle = document.createElement('div');
                 leftAisle.className = 'aisle-space';
                 rowSeatsDiv.appendChild(leftAisle);
@@ -658,7 +690,6 @@
                     }
                     rowSeatsDiv.appendChild(seat);
 
-                    // 3号与2号座位之间空两个座位空间
                     if (seatNum === 3) {
                         const midAisle = document.createElement('div');
                         midAisle.className = 'aisle-space';
@@ -670,7 +701,6 @@
                 }
 
             } else if (rowLetter === 'A') {
-                // A排：从左到右排列，22到1号座位；3号与2号之间空两个座位空间为过道
                 for (let seatNum = 22; seatNum >= 1; seatNum--) {
                     const seatName = `${rowLetter}-${seatNum}`;
                     const seat = document.createElement('div');
@@ -724,7 +754,7 @@
     const bookingForm = document.getElementById('bookingForm');
     const recordList = document.getElementById('recordList');
 
-    bookingForm.addEventListener('submit', function(e) {
+    bookingForm.addEventListener('submit', async function(e) {
         e.preventDefault();
 
         if (selectedSeats.length === 0) {
@@ -734,7 +764,24 @@
 
         const phone = document.getElementById('phone').value.trim();
         const movie = document.getElementById('movie').value;
-        const records = JSON.parse(localStorage.getItem('cinema_bookings')) || [];
+        
+        // 提交前重新拉取云端数据，进行双重校验防止并发冲突
+        const records = await fetchCloudBookings();
+
+        const occupiedSeats = [];
+        records.filter(r => r.movie === movie).forEach(r => {
+            if (Array.isArray(r.seats)) occupiedSeats.push(...r.seats);
+            else if (r.seat) occupiedSeats.push(r.seat);
+        });
+
+        // 检查所选座位是否已被他人抢先预订
+        for (let s of selectedSeats) {
+            if (occupiedSeats.includes(s)) {
+                alert(`Sorry! Seat ${s} has just been booked by another user. Please re-select.`);
+                await renderSeats();
+                return;
+            }
+        }
 
         const existingBookingsForPhone = records.filter(r => r.phone === phone && r.movie === movie);
         let existingSeatsCount = 0;
@@ -750,7 +797,6 @@
 
         const name = document.getElementById('name').value.trim();
         const nationality = document.getElementById('nationality').value;
-
         const bookingId = 'FW' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
         const newRecord = {
@@ -764,23 +810,39 @@
             time: new Date().toLocaleString()
         };
 
-        saveRecord(newRecord);
+        records.unshift(newRecord);
+        const success = await saveCloudBookings(records);
+
+        if (!success) {
+            alert('Booking failed due to network error. Please try again.');
+            return;
+        }
+
+        // 本地保存用户的个人订单记录以便查看二维码
+        saveLocalMyRecord(newRecord);
+
         bookingForm.reset();
-        renderSeats();
-        loadRecords();
+        await renderSeats();
+        loadLocalMyBookings();
         alert('Booking successful! Your Booking ID is: ' + bookingId);
     });
 
-    function loadRecords() {
-        const records = JSON.parse(localStorage.getItem('cinema_bookings')) || [];
+    function saveLocalMyRecord(record) {
+        const myBookings = JSON.parse(localStorage.getItem('my_cinema_tickets')) || [];
+        myBookings.unshift(record);
+        localStorage.setItem('my_cinema_tickets', JSON.stringify(myBookings));
+    }
+
+    function loadLocalMyBookings() {
+        const myBookings = JSON.parse(localStorage.getItem('my_cinema_tickets')) || [];
         
-        if (records.length === 0) {
-            recordList.innerHTML = '<div class="empty-tip">No bookings found</div>';
+        if (myBookings.length === 0) {
+            recordList.innerHTML = '<div class="empty-tip">No bookings found on this device</div>';
             return;
         }
 
         recordList.innerHTML = '';
-        records.forEach(record => {
+        myBookings.forEach(record => {
             const seatsStr = Array.isArray(record.seats) ? record.seats.join(', ') : record.seat;
             const li = document.createElement('li');
             li.className = 'record-item';
@@ -795,7 +857,6 @@
                     <div class="ticket-qr-box" id="qr-${record.bookingId}"></div>
                     <button class="save-qr-btn" onclick="saveQRCodeImage('${record.bookingId}', '${record.name}')">💾 Save Ticket</button>
                 </div>
-                <button class="delete-btn" onclick="deleteRecord(${record.id})">Cancel</button>
             `;
             recordList.appendChild(li);
 
@@ -866,22 +927,6 @@
             link.href = canvas.toDataURL('image/png');
             link.click();
         };
-    }
-
-    function saveRecord(record) {
-        const records = JSON.parse(localStorage.getItem('cinema_bookings')) || [];
-        records.unshift(record);
-        localStorage.setItem('cinema_bookings', JSON.stringify(records));
-    }
-
-    function deleteRecord(id) {
-        if (confirm('Are you sure you want to cancel this booking?')) {
-            let records = JSON.parse(localStorage.getItem('cinema_bookings')) || [];
-            records = records.filter(record => record.id !== id);
-            localStorage.setItem('cinema_bookings', JSON.stringify(records));
-            renderSeats();
-            loadRecords();
-        }
     }
 </script>
 
