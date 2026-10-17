@@ -42,7 +42,7 @@
 
         .container {
             width: 100%;
-            max-width: 900px;
+            max-width: 950px;
         }
 
         header {
@@ -160,7 +160,7 @@
             flex-direction: column;
             gap: 5px;
             align-items: center;
-            min-width: 680px;
+            min-width: 750px;
             padding: 15px 10px;
         }
 
@@ -168,10 +168,6 @@
             display: flex;
             align-items: center;
             gap: 5px;
-        }
-
-        .row-group.aisle-gap-bottom-de {
-            margin-bottom: 18px;
         }
 
         .row-label {
@@ -238,8 +234,13 @@
         }
 
         .aisle-space {
-            width: 10px;
+            width: 12px;
             flex-shrink: 0;
+        }
+
+        .row-divider {
+            height: 10px;
+            width: 100%;
         }
 
         .selected-seat-display {
@@ -399,12 +400,12 @@
             <div class="form-group">
                 <label>Graphical Seating Map (Screen Centered)</label>
                 <div class="screen-container">
-                    <div class="screen">SCREEN</div>
+                    <div class="screen">SCREEN 5</div>
                     <div class="seat-legend">
                         <div class="legend-item"><div class="legend-color" style="background:var(--seat-available)"></div>Available</div>
                         <div class="legend-item"><div class="legend-color" style="background:var(--seat-selected)"></div>Selected</div>
-                        <div class="legend-item"><div class="legend-color" style="background:var(--seat-occupied)"></div>Occupied</div>
-                        <div class="legend-item"><div class="legend-color" style="background:var(--seat-disabled)"></div>Disabled (DIS)</div>
+                        <div class="legend-item"><div class="legend-color" style="background:var(--seat-occupied)"></div>Occupied / Reserved (C & D)</div>
+                        <div class="legend-item"><div class="legend-color" style="background:var(--seat-disabled)"></div>Disable</div>
                     </div>
                 </div>
 
@@ -516,12 +517,20 @@
             else if (r.seat) occupiedSeats.push(r.seat);
         });
 
-        const rowNames = ['M', 'L', 'K', 'J', 'I', 'H', 'G', 'F', 'E', 'D', 'C', 'B', 'A'];
+        // 顺序：M 排到 A 排 (中间 D 和 E 之间空一排)
+        const rowStructure = ['M', 'L', 'K', 'J', 'I', 'H', 'G', 'F', 'E', 'DIVIDER', 'D', 'C', 'B', 'A'];
 
-        rowNames.forEach(rowLetter => {
+        rowStructure.forEach(item => {
+            if (item === 'DIVIDER') {
+                const divider = document.createElement('div');
+                divider.className = 'row-divider';
+                container.appendChild(divider);
+                return;
+            }
+
+            const rowLetter = item;
             const rowGroup = document.createElement('div');
             rowGroup.className = 'row-group';
-            // 点评要求4：C排与D排直接去除过道（不再加 aisle-gap-bottom-de 间距）
 
             const label = document.createElement('div');
             label.className = 'row-label';
@@ -531,85 +540,171 @@
             const rowSeatsDiv = document.createElement('div');
             rowSeatsDiv.className = 'row-seats';
 
-            let endCol = 22;
-            if (['M', 'L', 'K', 'J', 'I', 'H', 'G', 'F', 'E'].includes(rowLetter)) endCol = 22;
-            else if (['D', 'C', 'B'].includes(rowLetter)) endCol = 21;
-            else if (rowLetter === 'A') endCol = 22;
+            if (rowLetter === 'M') {
+                // M排：从左到右 21到13正常，12, 10, 9为残疾人座位(Disable)，无11号，然后 8到3
+                const mOrder = [21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 10, 9, 8, 7, 6, 5, 4, 3];
+                mOrder.forEach(seatNum => {
+                    const seatName = `${rowLetter}-${seatNum}`;
+                    const seat = document.createElement('div');
+                    seat.className = 'seat';
 
-            for (let col = endCol; col >= 1; col--) {
-                // 点评要求3：M排座位从12-20更正为13到21 (M排col 1到2为空, 3到21为真实座位, col 22留空或对应索引)
-                if (rowLetter === 'M') {
-                    if (col === 1 || col === 2 || col > 21) {
-                        const emptySeat = document.createElement('div');
-                        emptySeat.className = 'seat empty';
-                        rowSeatsDiv.appendChild(emptySeat);
-                        continue;
+                    let isDisabled = (seatNum === 12 || seatNum === 10 || seatNum === 9);
+
+                    if (isDisabled) {
+                        seat.classList.add('disabled-chair');
+                        seat.innerText = 'Disable';
+                    } else {
+                        seat.innerText = seatNum;
                     }
-                } else {
-                    if (['L', 'K', 'J', 'I', 'H', 'G', 'F'].includes(rowLetter) && (col === 1 || col === 2)) {
-                        const emptySeat = document.createElement('div');
-                        emptySeat.className = 'seat empty';
-                        rowSeatsDiv.appendChild(emptySeat);
-                        continue;
-                    }
-                    if (['M', 'L', 'K', 'J', 'I', 'H', 'G', 'F', 'E'].includes(rowLetter) && col > 21) {
-                        const aisle = document.createElement('div');
-                        aisle.className = 'aisle-space';
-                        rowSeatsDiv.appendChild(aisle);
-                        continue;
-                    }
-                    if (['D', 'C', 'B'].includes(rowLetter) && col > 20) {
-                        const aisle = document.createElement('div');
-                        aisle.className = 'aisle-space';
-                        rowSeatsDiv.appendChild(aisle);
-                        continue;
-                    }
-                }
 
-                if (rowLetter === 'M' && col === 11) {
-                    continue;
-                }
-
-                const seatName = `${rowLetter}-${col}`;
-                const seat = document.createElement('div');
-                seat.className = 'seat';
-
-                let isDisabledChair = (rowLetter === 'M' && (col === 9 || col === 10 || col === 12));
-                let isForcedOccupied = (rowLetter === 'C' || rowLetter === 'D');
-                let displayNum = (rowLetter === 'M' && col > 11) ? col - 1 : col;
-                
-                if (isDisabledChair) {
-                    seat.classList.add('disabled-chair');
-                    seat.innerText = 'DIS';
-                } else {
-                    seat.innerText = displayNum;
-                }
-
-                if (occupiedSeats.includes(seatName) || isForcedOccupied) {
-                    seat.classList.add('occupied');
-                } else {
-                    seat.addEventListener('click', function() {
-                        if (seat.classList.contains('selected')) {
-                            seat.classList.remove('selected');
-                            selectedSeats = selectedSeats.filter(s => s !== seatName);
-                        } else {
-                            if (selectedSeats.length >= 5) {
-                                alert('You can book a maximum of 5 seats per reservation!');
-                                return;
+                    if (occupiedSeats.includes(seatName)) {
+                        seat.classList.add('occupied');
+                    } else {
+                        seat.addEventListener('click', function() {
+                            if (seat.classList.contains('selected')) {
+                                seat.classList.remove('selected');
+                                selectedSeats = selectedSeats.filter(s => s !== seatName);
+                            } else {
+                                if (selectedSeats.length >= 5) {
+                                    alert('You can book a maximum of 5 seats per reservation!');
+                                    return;
+                                }
+                                seat.classList.add('selected');
+                                selectedSeats.push(seatName);
                             }
-                            seat.classList.add('selected');
-                            selectedSeats.push(seatName);
-                        }
-                        updateSelectedText();
-                    });
+                            updateSelectedText();
+                        });
+                    }
+                    rowSeatsDiv.appendChild(seat);
+                });
+
+            } else if (['L', 'K', 'J', 'I', 'H', 'G', 'F'].includes(rowLetter)) {
+                // F~L排：从左到右，最左边空两个座位为过道，从 21 到 3 号座位，最右边空两个座位为过道
+                const leftAisle = document.createElement('div');
+                leftAisle.className = 'aisle-space';
+                rowSeatsDiv.appendChild(leftAisle);
+                const leftAisle2 = document.createElement('div');
+                leftAisle2.className = 'aisle-space';
+                rowSeatsDiv.appendChild(leftAisle2);
+
+                for (let seatNum = 21; seatNum >= 3; seatNum--) {
+                    const seatName = `${rowLetter}-${seatNum}`;
+                    const seat = document.createElement('div');
+                    seat.className = 'seat';
+                    seat.innerText = seatNum;
+
+                    if (occupiedSeats.includes(seatName)) {
+                        seat.classList.add('occupied');
+                    } else {
+                        seat.addEventListener('click', function() {
+                            if (seat.classList.contains('selected')) {
+                                seat.classList.remove('selected');
+                                selectedSeats = selectedSeats.filter(s => s !== seatName);
+                            } else {
+                                if (selectedSeats.length >= 5) {
+                                    alert('You can book a maximum of 5 seats per reservation!');
+                                    return;
+                                }
+                                seat.classList.add('selected');
+                                selectedSeats.push(seatName);
+                            }
+                            updateSelectedText();
+                        });
+                    }
+                    rowSeatsDiv.appendChild(seat);
                 }
 
-                rowSeatsDiv.appendChild(seat);
+                const rightAisle = document.createElement('div');
+                rightAisle.className = 'aisle-space';
+                rowSeatsDiv.appendChild(rightAisle);
+                const rightAisle2 = document.createElement('div');
+                rightAisle2.className = 'aisle-space';
+                rowSeatsDiv.appendChild(rightAisle2);
 
-                if (col === 2) {
-                    const aisle = document.createElement('div');
-                    aisle.className = 'aisle-space';
-                    rowSeatsDiv.appendChild(aisle);
+            } else if (['B', 'C', 'D', 'E'].includes(rowLetter)) {
+                // B, C, D, E排：最左边空两个位置为过道，从21到1号座位；3号与2号之间空两个座位空间为过道
+                const leftAisle = document.createElement('div');
+                leftAisle.className = 'aisle-space';
+                rowSeatsDiv.appendChild(leftAisle);
+                const leftAisle2 = document.createElement('div');
+                leftAisle2.className = 'aisle-space';
+                rowSeatsDiv.appendChild(leftAisle2);
+
+                let isReservedRow = (rowLetter === 'C' || rowLetter === 'D');
+
+                for (let seatNum = 21; seatNum >= 1; seatNum--) {
+                    const seatName = `${rowLetter}-${seatNum}`;
+                    const seat = document.createElement('div');
+                    seat.className = 'seat';
+                    seat.innerText = seatNum;
+
+                    if (occupiedSeats.includes(seatName) || isReservedRow) {
+                        seat.classList.add('occupied');
+                    } else {
+                        seat.addEventListener('click', function() {
+                            if (seat.classList.contains('selected')) {
+                                seat.classList.remove('selected');
+                                selectedSeats = selectedSeats.filter(s => s !== seatName);
+                            } else {
+                                if (selectedSeats.length >= 5) {
+                                    alert('You can book a maximum of 5 seats per reservation!');
+                                    return;
+                                }
+                                seat.classList.add('selected');
+                                selectedSeats.push(seatName);
+                            }
+                            updateSelectedText();
+                        });
+                    }
+                    rowSeatsDiv.appendChild(seat);
+
+                    // 3号与2号座位之间空两个座位空间
+                    if (seatNum === 3) {
+                        const midAisle = document.createElement('div');
+                        midAisle.className = 'aisle-space';
+                        rowSeatsDiv.appendChild(midAisle);
+                        const midAisle2 = document.createElement('div');
+                        midAisle2.className = 'aisle-space';
+                        rowSeatsDiv.appendChild(midAisle2);
+                    }
+                }
+
+            } else if (rowLetter === 'A') {
+                // A排：从左到右排列，22到1号座位；3号与2号之间空两个座位空间为过道
+                for (let seatNum = 22; seatNum >= 1; seatNum--) {
+                    const seatName = `${rowLetter}-${seatNum}`;
+                    const seat = document.createElement('div');
+                    seat.className = 'seat';
+                    seat.innerText = seatNum;
+
+                    if (occupiedSeats.includes(seatName)) {
+                        seat.classList.add('occupied');
+                    } else {
+                        seat.addEventListener('click', function() {
+                            if (seat.classList.contains('selected')) {
+                                seat.classList.remove('selected');
+                                selectedSeats = selectedSeats.filter(s => s !== seatName);
+                            } else {
+                                if (selectedSeats.length >= 5) {
+                                    alert('You can book a maximum of 5 seats per reservation!');
+                                    return;
+                                }
+                                seat.classList.add('selected');
+                                selectedSeats.push(seatName);
+                            }
+                            updateSelectedText();
+                        });
+                    }
+                    rowSeatsDiv.appendChild(seat);
+
+                    if (seatNum === 3) {
+                        const midAisle = document.createElement('div');
+                        midAisle.className = 'aisle-space';
+                        rowSeatsDiv.appendChild(midAisle);
+                        const midAisle2 = document.createElement('div');
+                        midAisle2.className = 'aisle-space';
+                        rowSeatsDiv.appendChild(midAisle2);
+                    }
                 }
             }
 
