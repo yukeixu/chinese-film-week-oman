@@ -227,12 +227,6 @@
             font-weight: bold;
         }
 
-        .seat.empty {
-            background-color: transparent;
-            cursor: default;
-            pointer-events: none;
-        }
-
         .aisle-space {
             width: 12px;
             flex-shrink: 0;
@@ -495,15 +489,15 @@
 </div>
 
 <script>
-    // 云端存储配置 (使用免费公开的 JSONBin.io 存储服务，实现多用户实时同步)
-    const BIN_ID = '6ad37fdfffd5d16053739f05'; // 公共云端存储桶
-    const API_KEY = '$2a$10$Ct25jThXL/UfCmIRxWPPreSccnK4cMEmk4vpob9.GbZtRTEb3PXQu'; // 访问密钥
+    // 绑定您的专属云端 Bin 存储凭证
+    const BIN_ID = '6ad37fdfffd5d16053739f05';
+    const API_KEY = '$2a$10$Ct25jThXL/UfCmIRxWPPreSccnK4cMEmk4vpob9.GbZtRTEb3PXQu';
 
     let selectedSeats = [];
 
     document.addEventListener('DOMContentLoaded', async function() {
         await renderSeats();
-        loadLocalMyBookings();
+        await loadMyBookings();
     });
 
     // 从云端获取所有订单
@@ -515,8 +509,8 @@
             const data = await response.json();
             return data.record.bookings || [];
         } catch (e) {
-            console.error('Failed to fetch from cloud, fallback to local storage', e);
-            return JSON.parse(localStorage.getItem('cinema_bookings')) || [];
+            console.error('Failed to fetch from cloud', e);
+            return [];
         }
     }
 
@@ -765,7 +759,6 @@
         const phone = document.getElementById('phone').value.trim();
         const movie = document.getElementById('movie').value;
         
-        // 提交前重新拉取云端数据，进行双重校验防止并发冲突
         const records = await fetchCloudBookings();
 
         const occupiedSeats = [];
@@ -774,7 +767,6 @@
             else if (r.seat) occupiedSeats.push(r.seat);
         });
 
-        // 检查所选座位是否已被他人抢先预订
         for (let s of selectedSeats) {
             if (occupiedSeats.includes(s)) {
                 alert(`Sorry! Seat ${s} has just been booked by another user. Please re-select.`);
@@ -818,12 +810,12 @@
             return;
         }
 
-        // 本地保存用户的个人订单记录以便查看二维码
+        // 同时在本地保存一份以便用户在个人终端快速查看自己的票
         saveLocalMyRecord(newRecord);
 
         bookingForm.reset();
         await renderSeats();
-        loadLocalMyBookings();
+        await loadMyBookings();
         alert('Booking successful! Your Booking ID is: ' + bookingId);
     });
 
@@ -833,16 +825,24 @@
         localStorage.setItem('my_cinema_tickets', JSON.stringify(myBookings));
     }
 
-    function loadLocalMyBookings() {
-        const myBookings = JSON.parse(localStorage.getItem('my_cinema_tickets')) || [];
+    async function loadMyBookings() {
+        // 从云端和本地结合加载，确保用户在当前设备能看到自己的票并支持直接取消
+        const cloudRecords = await fetchCloudBookings();
+        const myLocalTickets = JSON.parse(localStorage.getItem('my_cinema_tickets')) || [];
         
-        if (myBookings.length === 0) {
+        // 过滤出依然存在于云端的本地记录
+        const activeMyBookings = myLocalTickets.filter(local => 
+            cloudRecords.some(cloud => cloud.id === local.id)
+        );
+        localStorage.setItem('my_cinema_tickets', JSON.stringify(activeMyBookings));
+
+        if (activeMyBookings.length === 0) {
             recordList.innerHTML = '<div class="empty-tip">No bookings found on this device</div>';
             return;
         }
 
         recordList.innerHTML = '';
-        myBookings.forEach(record => {
+        activeMyBookings.forEach(record => {
             const seatsStr = Array.isArray(record.seats) ? record.seats.join(', ') : record.seat;
             const li = document.createElement('li');
             li.className = 'record-item';
@@ -857,6 +857,7 @@
                     <div class="ticket-qr-box" id="qr-${record.bookingId}"></div>
                     <button class="save-qr-btn" onclick="saveQRCodeImage('${record.bookingId}', '${record.name}')">💾 Save Ticket</button>
                 </div>
+                <button class="delete-btn" onclick="cancelMyBooking(${record.id})">Cancel Booking</button>
             `;
             recordList.appendChild(li);
 
@@ -869,6 +870,33 @@
                 correctLevel : QRCode.CorrectLevel.M
             });
         });
+    }
+
+    // 用户在个人界面取消预订
+    async function cancelMyBooking(id) {
+        if (!confirm('Are you sure you want to cancel this booking? This action will release your seats.')) {
+            return;
+        }
+
+        // 1. 更新云端数据
+        let cloudRecords = await fetchCloudBookings();
+        cloudRecords = cloudRecords.filter(record => record.id !== id);
+        const success = await saveCloudBookings(cloudRecords);
+
+        if (!success) {
+            alert('Failed to connect to cloud. Please try again.');
+            return;
+        }
+
+        // 2. 更新本地缓存
+        let myLocalTickets = JSON.parse(localStorage.getItem('my_cinema_tickets')) || [];
+        myLocalTickets = myLocalTickets.filter(record => record.id !== id);
+        localStorage.setItem('my_cinema_tickets', JSON.stringify(myLocalTickets));
+
+        // 3. 刷新座位图与个人订单列表
+        await renderSeats();
+        await loadMyBookings();
+        alert('Booking cancelled successfully. Seats have been released.');
     }
 
     function saveQRCodeImage(bookingId, attendeeName) {
