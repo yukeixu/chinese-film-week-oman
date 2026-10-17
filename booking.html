@@ -22,7 +22,6 @@
             --seat-selected: #2ed573;
             --seat-occupied: #c0392b;
             --seat-disabled: #ffa502;
-            --seat-vip: #9b59b6;
         }
 
         * {
@@ -126,7 +125,7 @@
         .seat-legend {
             display: flex;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             font-size: 11px;
             color: #747d8c;
             margin-bottom: 12px;
@@ -145,11 +144,10 @@
             border-radius: 2px;
         }
 
-        /* 手机端左右滑动核心样式优化 */
         .seating-map-wrapper {
             width: 100%;
             overflow-x: auto;
-            -webkit-overflow-scrolling: touch; /* 苹果手机平滑滚动惯性 */
+            -webkit-overflow-scrolling: touch;
             padding-bottom: 15px;
             border: 1px dashed var(--border-color);
             border-radius: 8px;
@@ -162,7 +160,7 @@
             flex-direction: column;
             gap: 5px;
             align-items: center;
-            min-width: 680px; /* 确保内容有足够宽度可供左右滚动 */
+            min-width: 680px;
             padding: 15px 10px;
         }
 
@@ -189,7 +187,7 @@
             display: flex;
             gap: 4px;
             align-items: center;
-            flex-wrap: nowrap; /* 绝对禁止换行 */
+            flex-wrap: nowrap;
         }
 
         .seat {
@@ -204,11 +202,11 @@
             color: #333;
             cursor: pointer;
             user-select: none;
-            flex-shrink: 0; /* 防止座位被挤压变形 */
+            flex-shrink: 0;
             transition: transform 0.1s, background-color 0.2s;
         }
 
-        .seat:hover:not(.occupied):not(.vip-seat):not(.empty) {
+        .seat:hover:not(.occupied):not(.empty) {
             transform: scale(1.15);
             background-color: #a4b0be;
         }
@@ -230,14 +228,6 @@
             background-color: var(--seat-disabled);
             color: white;
             font-size: 6px;
-            font-weight: bold;
-        }
-
-        .seat.vip-seat {
-            background-color: var(--seat-vip);
-            color: white;
-            cursor: not-allowed;
-            font-size: 7px;
             font-weight: bold;
         }
 
@@ -386,23 +376,23 @@
 
 <div class="container">
     <header>
-        <h1>🇨🇳 🇴🇲 Chinese Film Week in Oman</h1>
-        <p>Organized by the Embassy of China in Oman | Cinema 5 Seating System</p>
+        <h1>Chinese Film Week in Oman</h1>
+        <p>address: Cinema 5, VOX cinema, Mall of Oman</p>
     </header>
 
     <div class="card">
-        <h2>Book a Screening & Pick Seats</h2>
+        <h2>Please select your movie</h2>
         <form id="bookingForm">
             <div class="form-group">
                 <label for="movie">Select Screening Session (Cinema 5)</label>
                 <select id="movie" onchange="renderSeats()">
-                    <option value="Oct 21 (Wed) 20:10-21:40 | A Tapestry of a Legendary Land">Oct 21 (Wed) 20:10-21:40 - A Tapestry of a Legendary Land (只此青绿)</option>
-                    <option value="Oct 22 (Thu) 18:00-19:59 | Dear You">Oct 22 (Thu) 18:00-19:59 - Dear You</option>
-                    <option value="Oct 22 (Thu) 20:22-22:14 | B for Busy">Oct 22 (Thu) 20:22-22:14 - B for Busy</option>
-                    <option value="Oct 23 (Fri) 16:50-19:43 | The Wandering Earth 2">Oct 23 (Fri) 16:50-19:43 - The Wandering Earth 2 (流浪地球2)</option>
-                    <option value="Oct 23 (Fri) 20:08-22:21 | I Am What I Am 2">Oct 23 (Fri) 20:08-22:21 - I Am What I Am 2 (雄狮少年2)</option>
-                    <option value="Oct 24 (Sat) 17:23-19:24 | Crossing">Oct 24 (Sat) 17:23-19:24 - Crossing (过昭关/跨越)</option>
-                    <option value="Oct 24 (Sat) 19:50-22:11 | The Shadow's Edge">Oct 24 (Sat) 19:50-22:11 - The Shadow's Edge</option>
+                    <option value="Oct 21 (Wed) 20:10-21:40 | A Tapestry of a Legendary Land">Oct 21 (Wed) 20:10-21:40 - A Tapestry of a Legendary Land《只此青绿》</option>
+                    <option value="Oct 22 (Thu) 18:00-19:59 | Dear You">Oct 22 (Thu) 18:00-19:59 - Dear You《给阿嬷的情书》</option>
+                    <option value="Oct 22 (Thu) 20:30-22:22 | B for Busy">Oct 22 (Thu) 20:30-22:22 - B for Busy《爱情神话》</option>
+                    <option value="Oct 23 (Fri) 17:00-19:53 | The Wandering Earth 2">Oct 23 (Fri) 17:00-19:53 - The Wandering Earth 2《流浪地球2》</option>
+                    <option value="Oct 23 (Fri) 20:20-22:33 | I Am What I Am 2">Oct 23 (Fri) 20:20-22:33 - I Am What I Am 2《雄狮少年2》</option>
+                    <option value="Oct 24 (Sat) 17:20-19:21 | Crossing">Oct 24 (Sat) 17:20-19:21 - Crossing《四渡》</option>
+                    <option value="Oct 24 (Sat) 19:50-22:13 | The Shadow's Edge">Oct 24 (Sat) 19:50-22:13 - The Shadow's Edge《捕风捉影》</option>
                 </select>
             </div>
 
@@ -415,7 +405,6 @@
                         <div class="legend-item"><div class="legend-color" style="background:var(--seat-selected)"></div>Selected</div>
                         <div class="legend-item"><div class="legend-color" style="background:var(--seat-occupied)"></div>Occupied</div>
                         <div class="legend-item"><div class="legend-color" style="background:var(--seat-disabled)"></div>Disabled (DIS)</div>
-                        <div class="legend-item"><div class="legend-color" style="background:var(--seat-vip)"></div>VIP Reserved</div>
                     </div>
                 </div>
 
@@ -428,27 +417,68 @@
             </div>
 
             <div class="form-group">
-                <label for="name">Full Name</label>
+                <label for="name">Name:</label>
                 <input type="text" id="name" required placeholder="Enter your full name">
             </div>
 
             <div class="form-group">
-                <label for="idType">ID Type</label>
-                <select id="idType">
-                    <option value="ID Card">ID Card</option>
-                    <option value="Passport">Passport</option>
-                    <option value="Driver License">Driver License</option>
+                <label for="nationality">Nationality:</label>
+                <select id="nationality" required>
+                    <option value="" disabled selected>Select your nationality</option>
+                    <option value="Afghanistan">Afghanistan</option>
+                    <option value="Albania">Albania</option>
+                    <option value="Algeria">Algeria</option>
+                    <option value="Argentina">Argentina</option>
+                    <option value="Australia">Australia</option>
+                    <option value="Austria">Austria</option>
+                    <option value="Bahrain">Bahrain</option>
+                    <option value="Bangladesh">Bangladesh</option>
+                    <option value="Belgium">Belgium</option>
+                    <option value="Brazil">Brazil</option>
+                    <option value="Canada">Canada</option>
+                    <option value="China">China</option>
+                    <option value="Denmark">Denmark</option>
+                    <option value="Egypt">Egypt</option>
+                    <option value="France">France</option>
+                    <option value="Germany">Germany</option>
+                    <option value="India">India</option>
+                    <option value="Indonesia">Indonesia</option>
+                    <option value="Iraq">Iraq</option>
+                    <option value="Italy">Italy</option>
+                    <option value="Japan">Japan</option>
+                    <option value="Jordan">Jordan</option>
+                    <option value="Kuwait">Kuwait</option>
+                    <option value="Lebanon">Lebanon</option>
+                    <option value="Malaysia">Malaysia</option>
+                    <option value="Morocco">Morocco</option>
+                    <option value="Netherlands">Netherlands</option>
+                    <option value="New Zealand">New Zealand</option>
+                    <option value="Oman">Oman</option>
+                    <option value="Pakistan">Pakistan</option>
+                    <option value="Philippines">Philippines</option>
+                    <option value="Qatar">Qatar</option>
+                    <option value="Russia">Russia</option>
+                    <option value="Saudi Arabia">Saudi Arabia</option>
+                    <option value="Singapore">Singapore</option>
+                    <option value="South Africa">South Africa</option>
+                    <option value="South Korea">South Korea</option>
+                    <option value="Spain">Spain</option>
+                    <option value="Sweden">Sweden</option>
+                    <option value="Switzerland">Switzerland</option>
+                    <option value="Syria">Syria</option>
+                    <option value="Tunisia">Tunisia</option>
+                    <option value="Turkey">Turkey</option>
+                    <option value="United Arab Emirates">United Arab Emirates</option>
+                    <option value="United Kingdom">United Kingdom</option>
+                    <option value="United States">United States</option>
+                    <option value="Yemen">Yemen</option>
+                    <option value="Other">Other</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="idNumber">ID Number</label>
-                <input type="text" id="idNumber" required placeholder="Enter your ID number">
-            </div>
-
-            <div class="form-group">
-                <label for="phone">Contact Number (Phone - Max 5 Seats Limit)</label>
-                <input type="tel" id="phone" required placeholder="Enter your phone number">
+                <label for="phone">Phone number: (Max 5 Seats Limit, numbers only, max 15 digits)</label>
+                <input type="tel" id="phone" required maxlength="15" oninput="this.value=this.value.replace(/\D/g,'')" placeholder="Enter phone number (numbers only)">
             </div>
 
             <button type="submit" class="btn">Confirm Booking</button>
@@ -491,9 +521,7 @@
         rowNames.forEach(rowLetter => {
             const rowGroup = document.createElement('div');
             rowGroup.className = 'row-group';
-            if (rowLetter === 'D') {
-                rowGroup.classList.add('aisle-gap-bottom-de');
-            }
+            // 点评要求4：C排与D排直接去除过道（不再加 aisle-gap-bottom-de 间距）
 
             const label = document.createElement('div');
             label.className = 'row-label';
@@ -508,24 +536,34 @@
             else if (['D', 'C', 'B'].includes(rowLetter)) endCol = 21;
             else if (rowLetter === 'A') endCol = 22;
 
-            for (let col = 1; col <= endCol; col++) {
-                if (['M', 'L', 'K', 'J', 'I', 'H', 'G', 'F'].includes(rowLetter) && (col === 1 || col === 2)) {
-                    const emptySeat = document.createElement('div');
-                    emptySeat.className = 'seat empty';
-                    rowSeatsDiv.appendChild(emptySeat);
-                    continue;
-                }
-                if (['M', 'L', 'K', 'J', 'I', 'H', 'G', 'F', 'E'].includes(rowLetter) && col > 21) {
-                    const aisle = document.createElement('div');
-                    aisle.className = 'aisle-space';
-                    rowSeatsDiv.appendChild(aisle);
-                    continue;
-                }
-                if (['D', 'C', 'B'].includes(rowLetter) && col > 20) {
-                    const aisle = document.createElement('div');
-                    aisle.className = 'aisle-space';
-                    rowSeatsDiv.appendChild(aisle);
-                    continue;
+            for (let col = endCol; col >= 1; col--) {
+                // 点评要求3：M排座位从12-20更正为13到21 (M排col 1到2为空, 3到21为真实座位, col 22留空或对应索引)
+                if (rowLetter === 'M') {
+                    if (col === 1 || col === 2 || col > 21) {
+                        const emptySeat = document.createElement('div');
+                        emptySeat.className = 'seat empty';
+                        rowSeatsDiv.appendChild(emptySeat);
+                        continue;
+                    }
+                } else {
+                    if (['L', 'K', 'J', 'I', 'H', 'G', 'F'].includes(rowLetter) && (col === 1 || col === 2)) {
+                        const emptySeat = document.createElement('div');
+                        emptySeat.className = 'seat empty';
+                        rowSeatsDiv.appendChild(emptySeat);
+                        continue;
+                    }
+                    if (['M', 'L', 'K', 'J', 'I', 'H', 'G', 'F', 'E'].includes(rowLetter) && col > 21) {
+                        const aisle = document.createElement('div');
+                        aisle.className = 'aisle-space';
+                        rowSeatsDiv.appendChild(aisle);
+                        continue;
+                    }
+                    if (['D', 'C', 'B'].includes(rowLetter) && col > 20) {
+                        const aisle = document.createElement('div');
+                        aisle.className = 'aisle-space';
+                        rowSeatsDiv.appendChild(aisle);
+                        continue;
+                    }
                 }
 
                 if (rowLetter === 'M' && col === 11) {
@@ -537,39 +575,33 @@
                 seat.className = 'seat';
 
                 let isDisabledChair = (rowLetter === 'M' && (col === 9 || col === 10 || col === 12));
-                let isVipSeat = (rowLetter === 'C' || rowLetter === 'D');
-
-                if (isVipSeat) {
-                    seat.classList.add('vip-seat');
-                    seat.innerText = 'VIP';
+                let isForcedOccupied = (rowLetter === 'C' || rowLetter === 'D');
+                let displayNum = (rowLetter === 'M' && col > 11) ? col - 1 : col;
+                
+                if (isDisabledChair) {
+                    seat.classList.add('disabled-chair');
+                    seat.innerText = 'DIS';
                 } else {
-                    let displayNum = (rowLetter === 'M' && col > 11) ? col - 1 : col;
-                    
-                    if (isDisabledChair) {
-                        seat.classList.add('disabled-chair');
-                        seat.innerText = 'DIS';
-                    } else {
-                        seat.innerText = displayNum;
-                    }
+                    seat.innerText = displayNum;
+                }
 
-                    if (occupiedSeats.includes(seatName)) {
-                        seat.classList.add('occupied');
-                    } else {
-                        seat.addEventListener('click', function() {
-                            if (seat.classList.contains('selected')) {
-                                seat.classList.remove('selected');
-                                selectedSeats = selectedSeats.filter(s => s !== seatName);
-                            } else {
-                                if (selectedSeats.length >= 5) {
-                                    alert('You can book a maximum of 5 seats per reservation!');
-                                    return;
-                                }
-                                seat.classList.add('selected');
-                                selectedSeats.push(seatName);
+                if (occupiedSeats.includes(seatName) || isForcedOccupied) {
+                    seat.classList.add('occupied');
+                } else {
+                    seat.addEventListener('click', function() {
+                        if (seat.classList.contains('selected')) {
+                            seat.classList.remove('selected');
+                            selectedSeats = selectedSeats.filter(s => s !== seatName);
+                        } else {
+                            if (selectedSeats.length >= 5) {
+                                alert('You can book a maximum of 5 seats per reservation!');
+                                return;
                             }
-                            updateSelectedText();
-                        });
-                    }
+                            seat.classList.add('selected');
+                            selectedSeats.push(seatName);
+                        }
+                        updateSelectedText();
+                    });
                 }
 
                 rowSeatsDiv.appendChild(seat);
@@ -622,8 +654,7 @@
         }
 
         const name = document.getElementById('name').value.trim();
-        const idType = document.getElementById('idType').value;
-        const idNumber = document.getElementById('idNumber').value.trim();
+        const nationality = document.getElementById('nationality').value;
 
         const bookingId = 'FW' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -631,8 +662,7 @@
             id: Date.now(),
             bookingId,
             name,
-            idType,
-            idNumber,
+            nationality,
             phone,
             movie,
             seats: [...selectedSeats],
@@ -661,10 +691,10 @@
             li.className = 'record-item';
             li.innerHTML = `
                 <div class="record-info">
-                    <h3>${record.name} <span class="booking-id-tag">ID: ${record.bookingId}</span></h3>
+                    <h3>${record.name} (${record.nationality}) <span class="booking-id-tag">ID: ${record.bookingId}</span></h3>
                     <p><strong>[Seats: ${seatsStr}]</strong></p>
                     <p>Screening: ${record.movie}</p>
-                    <p>${record.idType}: ${record.idNumber} | Phone: ${record.phone}</p>
+                    <p>Phone: ${record.phone}</p>
                 </div>
                 <div class="ticket-qr-container">
                     <div class="ticket-qr-box" id="qr-${record.bookingId}"></div>
@@ -703,16 +733,16 @@
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         ctx.fillStyle = '#c0392b';
-        ctx.fillRect(0, 0, canvas.width, 70);
+        ctx.fillRect(0, 0, canvas.width, 85);
 
         ctx.fillStyle = '#f1c40f';
-        ctx.font = 'bold 18px Arial';
+        ctx.font = 'bold 15px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('Chinese Film Week in Oman', canvas.width / 2, 32);
         
         ctx.fillStyle = '#ffffff';
-        ctx.font = '12px Arial';
-        ctx.fillText('Cinema 5 - Official Entry Ticket', canvas.width / 2, 52);
+        ctx.font = '11px Arial';
+        ctx.fillText('address: Cinema 5, VOX cinema, Mall of Oman', canvas.width / 2, 60);
 
         let img = new Image();
         if (canvasEl.tagName === 'CANVAS') {
@@ -722,19 +752,19 @@
         }
 
         img.onload = function() {
-            ctx.drawImage(img, 110, 95, 180, 180);
+            ctx.drawImage(img, 110, 105, 180, 180);
 
             ctx.fillStyle = '#2f3542';
             ctx.font = 'bold 16px Arial';
-            ctx.fillText(`Booking ID: ${bookingId}`, canvas.width / 2, 305);
+            ctx.fillText(`Booking ID: ${bookingId}`, canvas.width / 2, 315);
 
             ctx.font = '13px Arial';
             ctx.fillStyle = '#57606f';
-            ctx.fillText(`Attendee: ${attendeeName}`, canvas.width / 2, 335);
+            ctx.fillText(`Attendee: ${attendeeName}`, canvas.width / 2, 345);
 
             ctx.fillStyle = '#c0392b';
             ctx.font = 'bold 12px Arial';
-            ctx.fillText('Please present this QR code at the cinema entrance', canvas.width / 2, 385);
+            ctx.fillText('Please present this QR code at the cinema entrance', canvas.width / 2, 395);
 
             const link = document.createElement('a');
             link.download = `Ticket_${bookingId}.png`;

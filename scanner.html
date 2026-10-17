@@ -194,8 +194,8 @@
 <div class="container">
     <header>
         <a href="booking.html" class="home-link">⬅️ Booking</a>
-        <h1>🇨🇳 🇴🇲 Mobile Ticket Scanner</h1>
-        <p>Scan attendee QR codes or verify by Booking ID</p>
+        <h1>Mobile Ticket Scanner</h1>
+        <p>address: Cinema 5, VOX cinema, Mall of Oman</p>
     </header>
 
     <div class="card">
@@ -247,10 +247,9 @@
             
             resultContent.innerHTML = `
                 <div class="result-item">Booking ID: <span>${foundRecord.bookingId}</span></div>
-                <div class="result-item">Attendee Name: <span>${foundRecord.name}</span></div>
+                <div class="result-item">Attendee Name: <span>${foundRecord.name} (${foundRecord.nationality || 'N/A'})</span></div>
                 <div class="result-item">Screening Session: <span>${foundRecord.movie}</span></div>
                 <div class="result-item">Assigned Seats: <span style="color:#0288d1; font-size:16px;">${seatsStr}</span></div>
-                <div class="result-item">ID Type & Number: <span>${foundRecord.idType} - ${foundRecord.idNumber}</span></div>
                 <div class="result-item">Phone: <span>${foundRecord.phone}</span></div>
                 <div class="result-item">Registered Time: <span>${foundRecord.time}</span></div>
             `;

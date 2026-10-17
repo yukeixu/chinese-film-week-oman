@@ -20,7 +20,6 @@
             --seat-available: #ced6e0;
             --seat-occupied: #c0392b;
             --seat-disabled: #ffa502;
-            --seat-vip: #9b59b6;
         }
 
         * {
@@ -209,16 +208,13 @@
             flex-direction: column;
             gap: 6px;
             align-items: center;
+            min-width: 680px;
         }
 
         .row-group {
             display: flex;
             align-items: center;
             gap: 6px;
-        }
-
-        .row-group.aisle-gap-bottom-de {
-            margin-bottom: 20px;
         }
 
         .row-label {
@@ -258,13 +254,6 @@
             background-color: var(--seat-disabled);
             color: white;
             font-size: 7px;
-            font-weight: bold;
-        }
-
-        .seat.vip-seat {
-            background-color: var(--seat-vip);
-            color: white;
-            font-size: 8px;
             font-weight: bold;
         }
 
@@ -325,8 +314,8 @@
 <div class="container">
     <header>
         <a href="booking.html" class="home-link">⬅️ Booking</a>
-        <h1>🇨🇳 🇴🇲 Chinese Film Week - Admin Dashboard</h1>
-        <p>Cinema 5 Seating Status & Reservation Management</p>
+        <h1>Chinese Film Week - Admin Dashboard</h1>
+        <p>address: Cinema 5, VOX cinema, Mall of Oman</p>
     </header>
 
     <div class="card" id="adminLoginCard">
@@ -366,13 +355,13 @@
             <div style="flex-grow: 1; min-width: 280px;">
                 <label for="adminMovieSelect" style="font-size: 13px; margin-bottom: 4px;">Select Screening Session to Inspect:</label>
                 <select id="adminMovieSelect" onchange="renderAdminSeatMap()">
-                    <option value="Oct 21 (Wed) 20:10-21:40 | A Tapestry of a Legendary Land">Oct 21 (Wed) 20:10-21:40 - A Tapestry of a Legendary Land (只此青绿)</option>
-                    <option value="Oct 22 (Thu) 18:00-19:59 | Dear You">Oct 22 (Thu) 18:00-19:59 - Dear You</option>
-                    <option value="Oct 22 (Thu) 20:22-22:14 | B for Busy">Oct 22 (Thu) 20:22-22:14 - B for Busy</option>
-                    <option value="Oct 23 (Fri) 16:50-19:43 | The Wandering Earth 2">Oct 23 (Fri) 16:50-19:43 - The Wandering Earth 2 (流浪地球2)</option>
-                    <option value="Oct 23 (Fri) 20:08-22:21 | I Am What I Am 2">Oct 23 (Fri) 20:08-22:21 - I Am What I Am 2 (雄狮少年2)</option>
-                    <option value="Oct 24 (Sat) 17:23-19:24 | Crossing">Oct 24 (Sat) 17:23-19:24 - Crossing (过昭关/跨越)</option>
-                    <option value="Oct 24 (Sat) 19:50-22:11 | The Shadow's Edge">Oct 24 (Sat) 19:50-22:11 - The Shadow's Edge</option>
+                    <option value="Oct 21 (Wed) 20:10-21:40 | A Tapestry of a Legendary Land">Oct 21 (Wed) 20:10-21:40 - A Tapestry of a Legendary Land《只此青绿》</option>
+                    <option value="Oct 22 (Thu) 18:00-19:59 | Dear You">Oct 22 (Thu) 18:00-19:59 - Dear You《给阿嬷的情书》</option>
+                    <option value="Oct 22 (Thu) 20:30-22:22 | B for Busy">Oct 22 (Thu) 20:30-22:22 - B for Busy《爱情神话》</option>
+                    <option value="Oct 23 (Fri) 17:00-19:53 | The Wandering Earth 2">Oct 23 (Fri) 17:00-19:53 - The Wandering Earth 2《流浪地球2》</option>
+                    <option value="Oct 23 (Fri) 20:20-22:33 | I Am What I Am 2">Oct 23 (Fri) 20:20-22:33 - I Am What I Am 2《雄狮少年2》</option>
+                    <option value="Oct 24 (Sat) 17:20-19:21 | Crossing">Oct 24 (Sat) 17:20-19:21 - Crossing《四渡》</option>
+                    <option value="Oct 24 (Sat) 19:50-22:13 | The Shadow's Edge">Oct 24 (Sat) 19:50-22:13 - The Shadow's Edge《捕风捉影》</option>
                 </select>
             </div>
             <button class="delete-btn" style="background-color: #747d8c; height: 38px; align-self: flex-end;" onclick="adminLogout()">Logout</button>
@@ -385,7 +374,6 @@
                     <div class="legend-item"><div class="legend-color" style="background:var(--seat-available)"></div>Available</div>
                     <div class="legend-item"><div class="legend-color" style="background:var(--seat-occupied)"></div>Occupied</div>
                     <div class="legend-item"><div class="legend-color" style="background:var(--seat-disabled)"></div>Disabled Chair</div>
-                    <div class="legend-item"><div class="legend-color" style="background:var(--seat-vip)"></div>VIP Reserved</div>
                 </div>
             </div>
 
@@ -402,8 +390,7 @@
                 <thead>
                     <tr>
                         <th>Booking ID</th>
-                        <th>Name</th>
-                        <th>ID Type & Number</th>
+                        <th>Name & Nationality</th>
                         <th>Phone</th>
                         <th>Screening Session</th>
                         <th>Seats</th>
@@ -518,7 +505,7 @@
         renderAdminSeatMap();
 
         if (records.length === 0) {
-            adminTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #a4b0be; padding: 20px;">No registration records available</td></tr>`;
+            adminTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #a4b0be; padding: 20px;">No registration records available</td></tr>`;
             return;
         }
 
@@ -528,8 +515,7 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong style="color:#c0392b;">${record.bookingId || 'N/A'}</strong></td>
-                <td>${record.name}</td>
-                <td>${record.idType}: ${record.idNumber}</td>
+                <td>${record.name} (${record.nationality || 'N/A'})</td>
                 <td>${record.phone}</td>
                 <td>${record.movie}</td>
                 <td><span style="background:#e1f5fe; color:#0288d1; padding:3px 6px; border-radius:4px; font-weight:bold;">${seatsStr}</span></td>
@@ -559,7 +545,6 @@
         rowNames.forEach(rowLetter => {
             const rowGroup = document.createElement('div');
             rowGroup.className = 'row-group';
-            if (rowLetter === 'D') rowGroup.classList.add('aisle-gap-bottom-de');
 
             const label = document.createElement('div');
             label.className = 'row-label';
@@ -574,24 +559,33 @@
             else if (['D', 'C', 'B'].includes(rowLetter)) endCol = 21;
             else if (rowLetter === 'A') endCol = 22;
 
-            for (let col = 1; col <= endCol; col++) {
-                if (['M', 'L', 'K', 'J', 'I', 'H', 'G', 'F'].includes(rowLetter) && (col === 1 || col === 2)) {
-                    const emptySeat = document.createElement('div');
-                    emptySeat.className = 'seat empty';
-                    rowSeatsDiv.appendChild(emptySeat);
-                    continue;
-                }
-                if (['M', 'L', 'K', 'J', 'I', 'H', 'G', 'F', 'E'].includes(rowLetter) && col > 21) {
-                    const aisle = document.createElement('div');
-                    aisle.className = 'aisle-space';
-                    rowSeatsDiv.appendChild(aisle);
-                    continue;
-                }
-                if (['D', 'C', 'B'].includes(rowLetter) && col > 20) {
-                    const aisle = document.createElement('div');
-                    aisle.className = 'aisle-space';
-                    rowSeatsDiv.appendChild(aisle);
-                    continue;
+            for (let col = endCol; col >= 1; col--) {
+                if (rowLetter === 'M') {
+                    if (col === 1 || col === 2 || col > 21) {
+                        const emptySeat = document.createElement('div');
+                        emptySeat.className = 'seat empty';
+                        rowSeatsDiv.appendChild(emptySeat);
+                        continue;
+                    }
+                } else {
+                    if (['L', 'K', 'J', 'I', 'H', 'G', 'F'].includes(rowLetter) && (col === 1 || col === 2)) {
+                        const emptySeat = document.createElement('div');
+                        emptySeat.className = 'seat empty';
+                        rowSeatsDiv.appendChild(emptySeat);
+                        continue;
+                    }
+                    if (['M', 'L', 'K', 'J', 'I', 'H', 'G', 'F', 'E'].includes(rowLetter) && col > 21) {
+                        const aisle = document.createElement('div');
+                        aisle.className = 'aisle-space';
+                        rowSeatsDiv.appendChild(aisle);
+                        continue;
+                    }
+                    if (['D', 'C', 'B'].includes(rowLetter) && col > 20) {
+                        const aisle = document.createElement('div');
+                        aisle.className = 'aisle-space';
+                        rowSeatsDiv.appendChild(aisle);
+                        continue;
+                    }
                 }
 
                 if (rowLetter === 'M' && col === 11) {
@@ -603,25 +597,19 @@
                 seat.className = 'seat';
 
                 let isDisabledChair = (rowLetter === 'M' && (col === 9 || col === 10 || col === 12));
-                let isVipSeat = (rowLetter === 'C' || rowLetter === 'D');
+                let isForcedOccupied = (rowLetter === 'C' || rowLetter === 'D');
+                let displayNum = (rowLetter === 'M' && col > 11) ? col - 1 : col;
 
-                if (isVipSeat) {
-                    seat.classList.add('vip-seat');
-                    seat.innerText = 'VIP';
+                if (isDisabledChair) {
+                    seat.classList.add('disabled-chair');
+                    seat.innerText = 'DIS';
                 } else {
-                    let displayNum = (rowLetter === 'M' && col > 11) ? col - 1 : col;
+                    seat.innerText = displayNum;
+                }
 
-                    if (isDisabledChair) {
-                        seat.classList.add('disabled-chair');
-                        seat.innerText = 'DIS';
-                    } else {
-                        seat.innerText = displayNum;
-                    }
-
-                    if (occupiedSeats.includes(seatName)) {
-                        seat.classList.add('occupied');
-                        occupiedCount++;
-                    }
+                if (occupiedSeats.includes(seatName) || isForcedOccupied) {
+                    seat.classList.add('occupied');
+                    occupiedCount++;
                 }
 
                 rowSeatsDiv.appendChild(seat);
