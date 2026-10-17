@@ -270,6 +270,20 @@
             background-color: var(--primary-hover);
         }
 
+        .btn-secondary {
+            background-color: #2980b9;
+            margin-top: 8px;
+        }
+        .btn-secondary:hover {
+            background-color: #3498db;
+        }
+
+        .search-box-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
         .record-list {
             list-style: none;
         }
@@ -480,6 +494,16 @@
         </form>
     </div>
 
+    <!-- 手机号找回预订卡片 -->
+    <div class="card">
+        <h2>Find My Tickets by Phone Number</h2>
+        <div class="search-box-row">
+            <input type="tel" id="searchPhoneInput" maxlength="15" oninput="this.value=this.value.replace(/\D/g,'')" placeholder="Enter your registered phone number">
+            <button class="btn" style="width: 130px; margin-top: 0;" onclick="findTicketsByPhone()">Search</button>
+        </div>
+        <div id="searchTip" style="font-size: 11px; color: #747d8c; margin-bottom: 8px;">Enter your phone number to retrieve bookings from cloud across devices.</div>
+    </div>
+
     <div class="card">
         <h2>My Bookings & QR Tickets</h2>
         <ul id="recordList" class="record-list">
@@ -489,7 +513,7 @@
 </div>
 
 <script>
-    // 绑定您的专属云端 Bin 存储凭证
+    // 您的专属云端 Bin 存储凭证
     const BIN_ID = '6ad37fdfffd5d16053739f05';
     const API_KEY = '$2a$10$Ct25jThXL/UfCmIRxWPPreSccnK4cMEmk4vpob9.GbZtRTEb3PXQu';
 
@@ -500,22 +524,26 @@
         await loadMyBookings();
     });
 
-    // 从云端获取所有订单
-    async function fetchCloudBookings() {
+    // 从云端获取所有数据（bookings 与 adminPassword）
+    async function fetchCloudData() {
         try {
             const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
                 headers: { 'X-Master-Key': API_KEY }
             });
             const data = await response.json();
-            return data.record.bookings || [];
+            const record = data.record || {};
+            return {
+                bookings: Array.isArray(record.bookings) ? record.bookings : [],
+                adminPassword: record.adminPassword || 'admin123'
+            };
         } catch (e) {
             console.error('Failed to fetch from cloud', e);
-            return [];
+            return { bookings: [], adminPassword: 'admin123' };
         }
     }
 
-    // 保存订单到云端
-    async function saveCloudBookings(bookings) {
+    // 保存数据到云端
+    async function saveCloudData(bookings, adminPassword) {
         try {
             const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
                 method: 'PUT',
@@ -523,7 +551,7 @@
                     'Content-Type': 'application/json',
                     'X-Master-Key': API_KEY
                 },
-                body: JSON.stringify({ bookings: bookings })
+                body: JSON.stringify({ bookings: bookings, adminPassword: adminPassword })
             });
             return response.ok;
         } catch (e) {
@@ -539,7 +567,8 @@
         updateSelectedText();
 
         const currentMovie = document.getElementById('movie').value;
-        const records = await fetchCloudBookings();
+        const cloudData = await fetchCloudData();
+        const records = cloudData.bookings;
         
         const occupiedSeats = [];
         records.filter(r => r.movie === currentMovie).forEach(r => {
@@ -759,7 +788,8 @@
         const phone = document.getElementById('phone').value.trim();
         const movie = document.getElementById('movie').value;
         
-        const records = await fetchCloudBookings();
+        const cloudData = await fetchCloudData();
+        const records = cloudData.bookings;
 
         const occupiedSeats = [];
         records.filter(r => r.movie === movie).forEach(r => {
@@ -803,31 +833,36 @@
         };
 
         records.unshift(newRecord);
-        const success = await saveCloudBookings(records);
+        const success = await saveCloudData(records, cloudData.adminPassword);
 
         if (!success) {
             alert('Booking failed due to network error. Please try again.');
             return;
         }
 
-        // 同时在本地保存一份以便用户在个人终端快速查看自己的票
+        // 本地保存并展示
         saveLocalMyRecord(newRecord);
 
         bookingForm.reset();
         await renderSeats();
         await loadMyBookings();
-        alert('Booking successful! Your Booking ID is: ' + bookingId);
+
+        // 强引导弹窗提示保存票据图片
+        alert(`🎉 Booking successful!\n\nYour Booking ID: ${bookingId}\n\n👉 IMPORTANT: Please click the "💾 Save Ticket" button on your ticket card below to save the QR code image to your device for smooth entry at Cinema 5!`);
     });
 
     function saveLocalMyRecord(record) {
         const myBookings = JSON.parse(localStorage.getItem('my_cinema_tickets')) || [];
-        myBookings.unshift(record);
-        localStorage.setItem('my_cinema_tickets', JSON.stringify(myBookings));
+        // 去重添加
+        if (!myBookings.some(item => item.id === record.id)) {
+            myBookings.unshift(record);
+            localStorage.setItem('my_cinema_tickets', JSON.stringify(myBookings));
+        }
     }
 
     async function loadMyBookings() {
-        // 从云端和本地结合加载，确保用户在当前设备能看到自己的票并支持直接取消
-        const cloudRecords = await fetchCloudBookings();
+        const cloudData = await fetchCloudData();
+        const cloudRecords = cloudData.bookings;
         const myLocalTickets = JSON.parse(localStorage.getItem('my_cinema_tickets')) || [];
         
         // 过滤出依然存在于云端的本地记录
@@ -836,13 +871,46 @@
         );
         localStorage.setItem('my_cinema_tickets', JSON.stringify(activeMyBookings));
 
-        if (activeMyBookings.length === 0) {
-            recordList.innerHTML = '<div class="empty-tip">No bookings found on this device</div>';
+        renderRecordList(activeMyBookings, 'No bookings found on this device. Use phone number search below to retrieve tickets.');
+    }
+
+    // 手机号一键找回预订记录
+    async function findTicketsByPhone() {
+        const phoneInput = document.getElementById('searchPhoneInput').value.trim();
+        if (!phoneInput) {
+            alert('Please enter a valid phone number to search.');
+            return;
+        }
+
+        const cloudData = await fetchCloudData();
+        const matchedRecords = cloudData.bookings.filter(r => r.phone === phoneInput);
+
+        if (matchedRecords.length === 0) {
+            alert(`No bookings found associated with phone number: ${phoneInput}`);
+            return;
+        }
+
+        // 将找到的记录自动合并到本地缓存，方便后续在设备上直接查看和管理
+        let myLocalTickets = JSON.parse(localStorage.getItem('my_cinema_tickets')) || [];
+        matchedRecords.forEach(rec => {
+            if (!myLocalTickets.some(item => item.id === rec.id)) {
+                myLocalTickets.unshift(rec);
+            }
+        });
+        localStorage.setItem('my_cinema_tickets', JSON.stringify(myLocalTickets));
+
+        renderRecordList(matchedRecords);
+        alert(`Successfully retrieved ${matchedRecords.length} booking(s) for phone ${phoneInput}!`);
+    }
+
+    function renderRecordList(records, emptyMessage = 'No bookings found') {
+        if (records.length === 0) {
+            recordList.innerHTML = `<div class="empty-tip">${emptyMessage}</div>`;
             return;
         }
 
         recordList.innerHTML = '';
-        activeMyBookings.forEach(record => {
+        records.forEach(record => {
             const seatsStr = Array.isArray(record.seats) ? record.seats.join(', ') : record.seat;
             const li = document.createElement('li');
             li.className = 'record-item';
@@ -878,22 +946,20 @@
             return;
         }
 
-        // 1. 更新云端数据
-        let cloudRecords = await fetchCloudBookings();
-        cloudRecords = cloudRecords.filter(record => record.id !== id);
-        const success = await saveCloudBookings(cloudRecords);
+        const cloudData = await fetchCloudData();
+        let cloudRecords = cloudData.bookings.filter(record => record.id !== id);
+        const success = await saveCloudData(cloudRecords, cloudData.adminPassword);
 
         if (!success) {
             alert('Failed to connect to cloud. Please try again.');
             return;
         }
 
-        // 2. 更新本地缓存
+        // 更新本地缓存
         let myLocalTickets = JSON.parse(localStorage.getItem('my_cinema_tickets')) || [];
         myLocalTickets = myLocalTickets.filter(record => record.id !== id);
         localStorage.setItem('my_cinema_tickets', JSON.stringify(myLocalTickets));
 
-        // 3. 刷新座位图与个人订单列表
         await renderSeats();
         await loadMyBookings();
         alert('Booking cancelled successfully. Seats have been released.');
