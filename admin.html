@@ -38,7 +38,7 @@
         .container {
             width: 100%;
             max-width: 950px;
-            display: none; /* 验证通过前隐藏内容 */
+            display: none; /* 验证通过前隐藏 */
         }
 
         header {
@@ -292,7 +292,7 @@
             padding: 15px 0;
         }
 
-        /* 模态框样式 */
+        /* 弹窗样式 */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -423,9 +423,11 @@
                 headers: { 'X-Master-Key': API_KEY }
             });
             const data = await response.json();
-            cloudData.bookings = data.record.bookings || [];
-            // 若云端未设置密码，则初始化为 admin123
-            cloudData.adminPassword = data.record.adminPassword || 'admin123';
+            const record = data.record || {};
+            
+            // 兼容处理：无论云端有没有 bookings 和 adminPassword 字段，都能安全读取
+            cloudData.bookings = Array.isArray(record.bookings) ? record.bookings : [];
+            cloudData.adminPassword = record.adminPassword || 'admin123';
         } catch (e) {
             console.error('Failed to fetch from cloud', e);
         }
@@ -458,12 +460,14 @@
 
     async function verifyAdminLogin() {
         const inputPwd = document.getElementById('adminPasswordInput').value.trim();
-        await fetchCloudData(); // 每次登录时拉取云端最新密码
+        
+        // 登录前先拉取云端最新数据（确保密码同步）
+        await fetchCloudData(); 
 
         if (inputPwd === cloudData.adminPassword) {
             document.getElementById('loginModal').style.display = 'none';
             
-            // 如果当前使用的是初始默认密码，强制弹出修改密码框
+            // 如果密码依然是默认的 admin123，强制弹出修改密码窗口
             if (cloudData.adminPassword === 'admin123') {
                 document.getElementById('changePasswordModal').style.display = 'flex';
             } else {
@@ -484,6 +488,8 @@
         }
 
         cloudData.adminPassword = newPwd;
+        
+        // 写入云端（同时保留原有的 bookings 列表不变）
         const success = await saveCloudData();
         if (success) {
             alert('Password successfully updated and synced to cloud!');
@@ -582,4 +588,115 @@
                 }
 
                 const rightAisle = document.createElement('div');
-                rightAisle.className = 'aisle-
+                rightAisle.className = 'aisle-space';
+                rowSeatsDiv.appendChild(rightAisle);
+                const rightAisle2 = document.createElement('div');
+                rightAisle2.className = 'aisle-space';
+                rowSeatsDiv.appendChild(rightAisle2);
+
+            } else if (['B', 'C', 'D', 'E'].includes(rowLetter)) {
+                const leftAisle = document.createElement('div');
+                leftAisle.className = 'aisle-space';
+                rowSeatsDiv.appendChild(leftAisle);
+                const leftAisle2 = document.createElement('div');
+                leftAisle2.className = 'aisle-space';
+                rowSeatsDiv.appendChild(leftAisle2);
+
+                let isReservedRow = (rowLetter === 'C' || rowLetter === 'D');
+
+                for (let seatNum = 21; seatNum >= 1; seatNum--) {
+                    const seatName = `${rowLetter}-${seatNum}`;
+                    const seat = document.createElement('div');
+                    seat.className = 'seat';
+                    seat.innerText = seatNum;
+
+                    if (occupiedSeats.includes(seatName) || isReservedRow) {
+                        seat.classList.add('occupied');
+                        occupiedCount++;
+                    }
+                    rowSeatsDiv.appendChild(seat);
+
+                    if (seatNum === 3) {
+                        const midAisle = document.createElement('div');
+                        midAisle.className = 'aisle-space';
+                        rowSeatsDiv.appendChild(midAisle);
+                        const midAisle2 = document.createElement('div');
+                        midAisle2.className = 'aisle-space';
+                        rowSeatsDiv.appendChild(midAisle2);
+                    }
+                }
+
+            } else if (rowLetter === 'A') {
+                for (let seatNum = 22; seatNum >= 1; seatNum--) {
+                    const seatName = `${rowLetter}-${seatNum}`;
+                    const seat = document.createElement('div');
+                    seat.className = 'seat';
+                    seat.innerText = seatNum;
+
+                    if (occupiedSeats.includes(seatName)) {
+                        seat.classList.add('occupied');
+                        occupiedCount++;
+                    }
+                    rowSeatsDiv.appendChild(seat);
+
+                    if (seatNum === 3) {
+                        const midAisle = document.createElement('div');
+                        midAisle.className = 'aisle-space';
+                        rowSeatsDiv.appendChild(midAisle);
+                        const midAisle2 = document.createElement('div');
+                        midAisle2.className = 'aisle-space';
+                        rowSeatsDiv.appendChild(midAisle2);
+                    }
+                }
+            }
+
+            rowGroup.appendChild(rowSeatsDiv);
+            container.appendChild(rowGroup);
+        });
+
+        document.getElementById('sessionStatsText').innerText = `Total Occupied / Reserved Seats in this session: ${occupiedCount}`;
+    }
+
+    async function loadAdminRecords() {
+        const records = cloudData.bookings;
+        const adminRecordList = document.getElementById('adminRecordList');
+        
+        if (records.length === 0) {
+            adminRecordList.innerHTML = '<div class="empty-tip">No bookings found in cloud</div>';
+            return;
+        }
+
+        adminRecordList.innerHTML = '';
+        records.forEach(record => {
+            const seatsStr = Array.isArray(record.seats) ? record.seats.join(', ') : record.seat;
+            const li = document.createElement('li');
+            li.className = 'record-item';
+            li.innerHTML = `
+                <div class="record-info">
+                    <h3>${record.name} (${record.nationality}) <span class="booking-id-tag">ID: ${record.bookingId}</span></h3>
+                    <p><strong>[Seats: ${seatsStr}]</strong></p>
+                    <p>Screening: ${record.movie}</p>
+                    <p>Phone: ${record.phone} | Time: ${record.time}</p>
+                </div>
+                <button class="delete-btn" onclick="adminDeleteRecord(${record.id})">Delete Booking</button>
+            `;
+            adminRecordList.appendChild(li);
+        });
+    }
+
+    async function adminDeleteRecord(id) {
+        if (confirm('Are you sure you want to delete this cloud booking?')) {
+            cloudData.bookings = cloudData.bookings.filter(record => record.id !== id);
+            const success = await saveCloudData();
+            if (success) {
+                await renderAdminSeatMap();
+                await loadAdminRecords();
+            } else {
+                alert('Delete failed due to network error.');
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
