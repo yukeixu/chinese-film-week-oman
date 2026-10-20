@@ -152,40 +152,27 @@
 </div>
 
 <script>
-    // 绑定您的专属云端存储凭证
-    const BIN_ID = '6ad37fdfffd5d16053739f05';
-    const API_KEY = '$2a$10$Ct25jThXL/UfCmIRxWPPreSccnK4cMEmk4vpob9.GbZtRTEb3PXQu';
-
-    // 从云端获取所有预订订单
-    async function fetchCloudBookings() {
-        try {
-            const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-                headers: { 'X-Master-Key': API_KEY }
-            });
-            const data = await response.json();
-            return data.record.bookings || [];
-        } catch (e) {
-            console.error('Failed to fetch bookings from cloud', e);
-            return [];
-        }
-    }
-
-    // 验证票务核心逻辑
+    // 通过 Vercel Serverless 后端 API 进行安全验证，前端不再暴露任何 Key
     async function verifyTicketCode(bookingId) {
         const cleanedId = bookingId.trim().toUpperCase();
-        const bookings = await fetchCloudBookings();
-        
-        const matchedTicket = bookings.find(r => r.bookingId.toUpperCase() === cleanedId);
-
-        return {
-            found: !!matchedTicket,
-            ticket: matchedTicket
-        };
+        try {
+            const response = await fetch(`/api/verify-ticket?id=${encodeURIComponent(cleanedId)}`);
+            if (!response.ok) {
+                throw new Error('Server verification failed');
+            }
+            const data = await response.json();
+            return {
+                found: data.found,
+                ticket: data.ticket
+            };
+        } catch (e) {
+            console.error('Failed to verify ticket via secure API', e);
+            return { found: false, ticket: null };
+        }
     }
 
     // 初始化相机扫码
     function onScanSuccess(decodedText, decodedResult) {
-        // 暂停或处理扫描结果
         document.getElementById('scanResult').innerHTML = `Scanning... Verifying ID: <b>${decodedText}</b>`;
         
         verifyTicketCode(decodedText).then(res => {
