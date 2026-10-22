@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese Film Week in Oman - Admin Dashboard</title>
+    <meta name="theme-color" content="#c0392b">
+    <style>
+        :root {
+            --primary-color: #c0392b;
+            --primary-hover: #e74c3c;
+            --accent-color: #f1c40f;
+            --bg-color: #f7f9fc;
+            --card-bg: #ffffff;
+            --text-color: #2f3542;
+            --border-color: #dfe4ea;
+            --seat-available: #ced6e0;
+            --seat-occupied: #c0392b;
+            --seat-disabled: #ffa502;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #2c0b0e 0%, #110203 100%);
+            color: var(--text-color);
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+            display: none; /* 默认隐藏，待验证通过后显示 */
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        header h1 {
+            font-size: 22px;
+            color: var(--accent-color);
+            margin-bottom: 6px;
+        }
+
+        header p {
+            color: #dcdde1;
+            font-size: 12px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+            border-top: 4px solid var(--primary-color);
+        }
+
+        .card h2 {
+            font-size: 17px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--bg-color);
+            color: #2c0b0e;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #2f3542;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .screen-container {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .screen {
+            background: #2c0b0e;
+            color: var(--accent-color);
+            padding: 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        .seat-legend {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            font-size: 11px;
+            color: #747d8c;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .legend-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        .seating-map-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 15px;
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            background: #fafbfc;
+            margin-bottom: 10px;
+        }
+
+        .seats-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: center;
+            min-width: 750px;
+            padding: 15px 10px;
+        }
+
+        .row-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .row-label {
+            width: 22px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #747d8c;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .row-seats {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            flex-wrap: nowrap;
+        }
+
+        .seat {
+            width: 24px;
+            height: 24px;
+            background-color: var(--seat-available);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: #333;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .seat.occupied {
+            background-color: var(--seat-occupied);
+            color: white;
+            font-weight: bold;
+        }
+
+        .seat.disabled-chair {
+            background-color: var(--seat-disabled);
+            color: white;
+            font-size: 6px;
+            font-weight: bold;
+        }
+
+        .aisle-space {
+            width: 12px;
+            flex-shrink: 0;
+        }
+
+        .row-divider {
+            height: 10px;
+            width: 100%;
+        }
+
+        .stats-text {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #2f3542;
+            margin-top: 10px;
+        }
+
+        .record-list {
+            list-style: none;
+        }
+
+        .record-item {
+            background: var(--bg-color);
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        @media(min-width: 600px) {
+            .record-item {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .record-info h3 {
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #2c0b0e;
+        }
+
+        .record-info p {
+            font-size: 12px;
+            color: #747d8c;
+            line-height: 1.4;
+        }
+
+        .booking-id-tag {
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            height: fit-content;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+
+        .empty-tip {
+            text-align: center;
+            color: #a4b0be;
+            font-size: 13px;
+            padding: 15px 0;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .modal-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-top: 4px solid var(--primary-color);
+        }
+        .modal-card h3 {
+            margin-bottom: 15px;
+            color: #2c0b0e;
+            font-size: 18px;
+        }
+        .modal-btn {
+            width: 100%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .modal-btn:hover {
+            background: var(--primary-hover);
+        }
+    </style>
+</head>
+<body>
+
+<div id="loginModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3>Admin Login Required</h3>
+        <div class="form-group">
+            <label for="adminPasswordInput">Enter Admin Password:</label>
+            <input type="password" id="adminPasswordInput" placeholder="Enter secure password">
+        </div>
+        <button class="modal-btn" onclick="verifyAdminLogin()">Login</button>
+    </div>
+</div>
+
+<div class="container" id="mainContainer">
+    <header>
+        <h1>Chinese Film Week in Oman - Admin</h1>
+        <p>address: Cinema 5, VOX cinema, Mall of Oman</p>
+    </header>
+
+    <div class="card">
+        <h2>Session Seating Status & Monitoring</h2>
+        <div class="form-group">
+            <label for="adminMovieSelect">Select Screening Session</label>
+            <select id="adminMovieSelect" onchange="renderAdminSeatMap()">
+                <option value="Oct 21 (Wed) 20:10-21:40 | A Tapestry of a Legendary Land">Oct 21 (Wed) 20:10-21:40 - A Tapestry of a Legendary Land《只此青绿》</option>
+                <option value="Oct 22 (Thu) 18:00-20:01 | Crossing">Oct 22 (Thu) 18:00-20:01 - Crossing《四渡》</option>
+                <option value="Oct 22 (Thu) 20:30-22:22 | B for Busy">Oct 22 (Thu) 20:30-22:22 - B for Busy《爱情神话》</option>
+                <option value="Oct 23 (Fri) 17:00-19:53 | The Wandering Earth 2">Oct 23 (Fri) 17:00-19:53 - The Wandering Earth 2《流浪地球2》</option>
+                <option value="Oct 23 (Fri) 20:20-22:33 | I Am What I Am 2">Oct 23 (Fri) 20:20-22:33 - I Am What I Am 2《雄狮少年2》</option>
+                <option value="Oct 24 (Sat) 17:20-19:19 | Dear You">Oct 24 (Sat) 17:20-19:19 - Dear You《给阿嬷的情书》</option>
+                <option value="Oct 24 (Sat) 19:50-22:13 | The Shadow's Edge">Oct 24 (Sat) 19:50-22:13 - The Shadow's Edge《捕风捉影》</option>
+            </select>
+        </div>
+
+        <div class="screen-container">
+            <div class="screen">SCREEN 5</div>
+            <div class="seat-legend">
+                <div class="legend-item"><div class="legend-color" style="background:var(--seat-available)"></div>Available</div>
+                <div class="legend-item"><div class="legend-color" style="background:var(--seat-occupied)"></div>Occupied / Reserved (C & D)</div>
+                <div class="legend-item"><div class="legend-color" style="background:var(--seat-disabled)"></div>Disable</div>
+            </div>
+        </div>
+
+        <div class="seating-map-wrapper">
+            <div class="seats-container" id="adminSeatsContainer"></div>
+        </div>
+        
+        <div class="stats-text" id="sessionStatsText">Total Occupied Seats: 0</div>
+    </div>
+
+    <div class="card">
+        <h2>All Cloud Bookings Management</h2>
+        <ul id="adminRecordList" class="record-list">
+            <div class="empty-tip">Loading cloud bookings...</div>
+        </ul>
+    </div>
+</div>
+
+<script>
+    // 敏感配置应当封装于后端安全环境变量中，此处建议对接后端 API 接口进行鉴权
+    let cloudData = { bookings: [] };
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        checkLoginStatus();
+    });
+
+    function checkLoginStatus() {
+        if (sessionStorage.getItem('admin_logged_in') === 'true') {
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'block';
+            initAdminDashboard();
+        }
+    }
+
+    async function verifyAdminLogin() {
+        const inputPwd = document.getElementById('adminPasswordInput').value.trim();
+        
+        // 建议实际生产环境中，将密码校验发送至安全的 Serverless 后端接口 (如 /api/admin-login)
+        // 此处为简化前端展示，使用加密散列或统一后端检验
+        if (inputPwd === 'admin123') { // 请务必在部署时修改强密码
+            sessionStorage.setItem('admin_logged_in', 'true');
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'block';
+            initAdminDashboard();
+        } else {
+            alert('Incorrect password! Please try again.');
+        }
+    }
+
+    async function fetchCloudDataSecure() {
+        try {
+            // 后续建议通过后端代理接口获取数据，避免前端直接暴露 API Key
+            const response = await fetch('/api/get-bookings'); 
+            const data = await response.json();
+            cloudData.bookings = data.bookings || [];
+        } catch (e) {
+            console.error('Failed to fetch bookings securely', e);
+        }
+    }
+
+    async function initAdminDashboard() {
+        await fetchCloudDataSecure();
+        await renderAdminSeatMap();
+        await loadAdminRecords();
+    }
+
+    async function renderAdminSeatMap() {
+        const container = document.getElementById('adminSeatsContainer');
+        container.innerHTML = '';
+
+        const selectedMovie = document.getElementById('adminMovieSelect').value;
+        const records = cloudData.bookings;
+        
+        const occupiedSeats = [];
+        records.filter(r => r.movie === selectedMovie).forEach(r => {
+            if (Array.isArray(r.seats)) occupiedSeats.push(...r.seats);
+            else if (r.seat) occupiedSeats.push(r.seat);
+        });
+
+        const rowStructure = ['M', 'L', 'K', 'J', 'I', 'H', 'G', 'F', 'E', 'DIVIDER', 'D', 'C', 'B', 'A'];
+        let occupiedCount = 0;
+
+        rowStructure.forEach(item => {
+            if (item === 'DIVIDER') {
+                const divider = document.createElement('div');
+                divider.className = 'row-divider';
+                container.appendChild(divider);
+                return;
+            }
+
+            const rowLetter = item;
+            const rowGroup = document.createElement('div');
+            rowGroup.className = 'row-group';
+
+            const label = document.createElement('div');
+            label.className = 'row-label';
+            label.innerText = rowLetter;
+            rowGroup.appendChild(label);
+
+            const rowSeatsDiv = document.createElement('div');
+            rowSeatsDiv.className = 'row-seats';
+
+            if (rowLetter === 'M') {
+                const mOrder = [21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 10, 9, 8, 7, 6, 5, 4, 3];
+                mOrder.forEach(seatNum => {
+                    const seatName = `${rowLetter}-${seatNum}`;
+                    const seat = document.createElement('div');
+                    seat.className = 'seat';
+
+                    let isDisabled = (seatNum === 12 || seatNum === 10 || seatNum === 9);
+
+                    if (isDisabled) {
+                        seat.classList.add('disabled-chair');
+                        seat.innerText = 'Disable';
+                    } else {
+                        seat.innerText = seatNum;
+                    }
+
+                    if (occupiedSeats.includes(seatName)) {
+                        seat.classList.add('occupied');
+                        occupiedCount++;
+                    }
+                    rowSeatsDiv.appendChild(seat);
+                });
+            } else if (['L', 'K', 'J', 'I', 'H', 'G', 'F'].includes(rowLetter)) {
+                const leftAisle = document.createElement('div');
+                leftAisle.className = 'aisle-space';
+                rowSeatsDiv.appendChild(leftAisle);
+                const leftAisle2 = document.createElement('div');
+                leftAisle2.className = 'aisle-space';
+                rowSeatsDiv.appendChild(leftAisle2);
+
+                for (let seatNum = 21; seatNum >= 3; seatNum--) {
+                    const seatName = `${rowLetter}-${seatNum}`;
+                    const seat = document.createElement('div');
+                    seat.className = 'seat';
+                    seat.innerText = seatNum;
+
+                    if (occupiedSeats.includes(seatName)) {
+                        seat.classList.add('occupied');
+                        occupiedCount++;
+                    }
+                    rowSeatsDiv.appendChild(seat);
+                }
+
+                const rightAisle = document.createElement('div');
+                rightAisle.className = 'aisle-space';
+                rowSeatsDiv.appendChild(rightAisle);
+                const rightAisle2 = document.createElement('div');
+                rightAisle2.className = 'aisle-space';
+                rowSeatsDiv.appendChild(rightAisle2);
+            } else if (['B', 'C', 'D', 'E'].includes(rowLetter)) {
+                const leftAisle = document.createElement('div');
+                leftAisle.className = 'aisle-space';
+                rowSeatsDiv.appendChild(leftAisle);
+                const leftAisle2 = document.createElement('div');
+                leftAisle2.className = 'aisle-space';
+                rowSeatsDiv.appendChild(leftAisle2);
+
+                let isReservedRow = (rowLetter === 'C' || rowLetter === 'D');
+
+                for (let seatNum = 21; seatNum >= 1; seatNum--) {
+                    const seatName = `${rowLetter}-${seatNum}`;
+                    const seat = document.createElement('div');
+                    seat.className = 'seat';
+                    seat.innerText = seatNum;
+
+                    if (occupiedSeats.includes(seatName) || isReservedRow) {
+                        seat.classList.add('occupied');
+                        occupiedCount++;
+                    }
+                    rowSeatsDiv.appendChild(seat);
+
+                    if (seatNum === 3) {
+                        const midAisle = document.createElement('div');
+                        midAisle.className = 'aisle-space';
+                        rowSeatsDiv.appendChild(midAisle);
+                        const midAisle2 = document.createElement('div');
+                        midAisle2.className = 'aisle-space';
+                        rowSeatsDiv.appendChild(midAisle2);
+                    }
+                }
+            } else if (rowLetter === 'A') {
+                for (let seatNum = 22; seatNum >= 1; seatNum--) {
+                    const seatName = `${rowLetter}-${seatNum}`;
+                    const seat = document.createElement('div');
+                    seat.className = 'seat';
+                    seat.innerText = seatNum;
+
+                    if (occupiedSeats.includes(seatName)) {
+                        seat.classList.add('occupied');
+                        occupiedCount++;
+                    }
+                    rowSeatsDiv.appendChild(seat);
+
+                    if (seatNum === 3) {
+                        const midAisle = document.createElement('div');
+                        midAisle.className = 'aisle-space';
+                        rowSeatsDiv.appendChild(midAisle);
+                        const midAisle2 = document.createElement('div');
+                        midAisle2.className = 'aisle-space';
+                        rowSeatsDiv.appendChild(midAisle2);
+                    }
+                }
+            }
+
+            rowGroup.appendChild(rowSeatsDiv);
+            container.appendChild(rowGroup);
+        });
+
+        document.getElementById('sessionStatsText').innerText = `Total Occupied / Reserved Seats in this session: ${occupiedCount}`;
+    }
+
+    async function loadAdminRecords() {
+        const records = cloudData.bookings;
+        const adminRecordList = document.getElementById('adminRecordList');
+        
+        if (records.length === 0) {
+            adminRecordList.innerHTML = '<div class="empty-tip">No bookings found in cloud</div>';
+            return;
+        }
+
+        adminRecordList.innerHTML = '';
+        records.forEach(record => {
+            const seatsStr = Array.isArray(record.seats) ? record.seats.join(', ') : record.seat;
+            const li = document.createElement('li');
+            li.className = 'record-item';
+            li.innerHTML = `
+                <div class="record-info">
+                    <h3>${record.name} (${record.nationality}) <span class="booking-id-tag">ID: ${record.bookingId}</span></h3>
+                    <p><strong>[Seats: ${seatsStr}]</strong></p>
+                    <p>Screening: ${record.movie}</p>
+                    <p>Phone: ${record.phone} | Time: ${record.time}</p>
+                </div>
+                <button class="delete-btn" onclick="adminDeleteRecord(${record.id})">Delete Booking</button>
+            `;
+            adminRecordList.appendChild(li);
+        });
+    }
+
+    async function adminDeleteRecord(id) {
+        if (confirm('Are you sure you want to delete this cloud booking?')) {
+            try {
+                const response = await fetch(`/api/delete-booking?id=${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    await initAdminDashboard();
+                } else {
+                    alert('Delete failed due to server error.');
+                }
+            } catch (e) {
+                alert('Delete failed due to network error.');
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
